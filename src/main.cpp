@@ -3,7 +3,6 @@
 #include <orbiter.h>
 #include <CamCalibration.h>
 #include "app.h"
-#include "vec.h"
 
 class Framebuffer : public App {
 public:
