@@ -19,7 +19,7 @@
 class CamCalibration {
 
 public:
-    void start();
+    void start(std::string filePath, bool calibrate = false); // Call load
     cv::Mat getIntrinsicParametersMatrix() {return cameraMatrix;}
     cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
     cv::Mat getRotationTransformMatrix(int i) {return rvecs.at(i);}
@@ -28,8 +28,11 @@ public:
 private :
     cv::Mat cameraMatrix;       // Intrinsic parameters
     cv::Mat distCoeffs;         // Distortions coefficients
-    std::vector<cv::Mat> rvecs; // Rotations transform (transform the object point to the image point)
-    std::vector<cv::Mat> tvecs; // Translation transform (transform the object point to the image point)
+    //std::vector<cv::Mat> rvecs; // Rotations transform (transform the object point to the image point)
+    //std::vector<cv::Mat> tvecs; // Translation transform (transform the object point to the image point)
+
+    void calibrate(); // Calibrate camera et write parameter
+    void load(std::string filePath = "out_camera_data.xml"); // Load calibration parameters from a file
 };
 
 

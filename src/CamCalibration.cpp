@@ -76,9 +76,7 @@ public:
         }
         if (squareSize <= 10e-6)
         {
-//            squareSize
             cerr << "Invalid square size " << squareSize << endl;
-//            goodInput = false;
         }
         if (nrFrames <= 0)
         {
@@ -124,16 +122,6 @@ public:
         if(calibZeroTangentDist)   flag |= CV_CALIB_ZERO_TANGENT_DIST;
         if(aspectRatio)            flag |= CV_CALIB_FIX_ASPECT_RATIO;
 
-
-        calibrationPattern = NOT_EXISTING;
-        if (!patternToUse.compare("CHESSBOARD")) calibrationPattern = CHESSBOARD;
-        if (!patternToUse.compare("CIRCLES_GRID")) calibrationPattern = CIRCLES_GRID;
-        if (!patternToUse.compare("ASYMMETRIC_CIRCLES_GRID")) calibrationPattern = ASYMMETRIC_CIRCLES_GRID;
-        if (calibrationPattern == NOT_EXISTING)
-        {
-            cerr << " Inexistent camera calibration mode: " << patternToUse << endl;
-            goodInput = false;
-        }
         atImageList = 0;
 
     }
@@ -178,7 +166,6 @@ public:
     }
 public:
     Size boardSize;            // The size of the board -> Number of items by width and height
-    Pattern calibrationPattern;// One of the Chessboard, circles, or asymmetric circle pattern
     float squareSize;          // The size of a square in your defined unit (point, millimeter,etc).
     int nrFrames;              // The number of frames to use from the input for calibration
     float aspectRatio;         // The aspect ratio
@@ -216,12 +203,7 @@ static void read(const FileNode& node, Settings& x, const Settings& default_valu
         x.read(node);
 }
 
-enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
-
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs,
-                           vector<vector<Point2f> > imagePoints );
-
-void CamCalibration::start(){
+/*void CamCalibration::start(){
     help();
     Settings s;
     const string inputSettingsFile = "conf/in_VID5.xml";
@@ -379,7 +361,7 @@ void CamCalibration::start(){
                 break;
         }
     }
-}
+}*/
 
 static double computeReprojectionErrors( const vector<vector<Point3f> >& objectPoints,
                                          const vector<vector<Point2f> >& imagePoints,
@@ -407,28 +389,13 @@ static double computeReprojectionErrors( const vector<vector<Point3f> >& objectP
     return std::sqrt(totalErr/totalPoints);
 }
 
-static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Point3f>& corners,
-                                     Settings::Pattern patternType /*= Settings::CHESSBOARD*/)
+static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Point3f>& corners)
 {
     corners.clear();
 
-    switch(patternType)
-    {
-        case Settings::CHESSBOARD:
-        case Settings::CIRCLES_GRID:
-            for( int i = 0; i < boardSize.height; ++i )
-                for( int j = 0; j < boardSize.width; ++j )
-                    corners.push_back(Point3f(float( j*squareSize ), float( i*squareSize ), 0));
-            break;
-
-        case Settings::ASYMMETRIC_CIRCLES_GRID:
-            for( int i = 0; i < boardSize.height; i++ )
-                for( int j = 0; j < boardSize.width; j++ )
-                    corners.push_back(Point3f(float((2*j + i % 2)*squareSize), float(i*squareSize), 0));
-            break;
-        default:
-            break;
-    }
+    for( int i = 0; i < boardSize.height; ++i )
+        for( int j = 0; j < boardSize.width; ++j )
+            corners.push_back(Point3f(float( j*squareSize ), float( i*squareSize ), 0));
 }
 
 static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat& distCoeffs,
@@ -443,7 +410,7 @@ static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat
     distCoeffs = Mat::zeros(8, 1, CV_64F);
 
     vector<vector<Point3f> > objectPoints(1);
-    calcBoardCornerPositions(s.boardSize, s.squareSize, objectPoints[0], s.calibrationPattern);
+    calcBoardCornerPositions(s.boardSize, s.squareSize, objectPoints[0]);
 
     objectPoints.resize(imagePoints.size(),objectPoints[0]);
 
@@ -545,14 +512,98 @@ bool runCalibrationAndSave(Settings& s, Size imageSize, Mat& cameraMatrix, Mat& 
     vector<float> reprojErrs;
     double totalAvgErr = 0;
 
-    bool ok = runCalibration(s,imageSize, cameraMatrix, distCoeffs, imagePoints, rvecs, tvecs,
-                             reprojErrs, totalAvgErr);
+    if( runCalibration(s,imageSize, cameraMatrix, distCoeffs, imagePoints, rvecs, tvecs, reprojErrs, totalAvgErr) )
+    {
+        saveCameraParams( s, imageSize, cameraMatrix, distCoeffs, rvecs ,tvecs, reprojErrs, imagePoints, totalAvgErr);
+        return true;
+    }
 
-    cout << (ok ? "Calibration succeeded" : "Calibration failed")
-         << ". avg re projection error = "  << totalAvgErr ;
+    return false;
+}
 
-    if( ok )
-        saveCameraParams( s, imageSize, cameraMatrix, distCoeffs, rvecs ,tvecs, reprojErrs,
-                          imagePoints, totalAvgErr);
-    return ok;
+void CamCalibration::calibrate() {
+    help();
+    Settings s;
+    const string inputSettingsFile = "conf/in_VID5.xml";
+    FileStorage fs(inputSettingsFile, FileStorage::READ); // Read the settings
+    if (!fs.isOpened())
+    {
+        cout << "Could not open the configuration file: \"" << inputSettingsFile << "\"" << endl;
+    }
+    fs["Settings"] >> s;
+    fs.release();                                         // close Settings file
+
+    if (!s.goodInput)
+    {
+        cout << "Invalid input detected. Application stopping. " << endl;
+    }
+
+    vector<vector<Point2f> > imagePoints;
+
+    Size imageSize;
+    clock_t prevTimestamp = 0;
+    const Scalar RED(0,0,255), GREEN(0,255,0);
+    const char ESC_KEY = 27;
+
+    while(true)
+    {
+        Mat view;
+        bool blinkOutput = false;
+        view = s.nextImage();
+
+        //-----  If got enough image, then stop calibration-------------
+        if(imagePoints.size() >= (unsigned)s.nrFrames) {
+            runCalibrationAndSave(s, imageSize, cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints);
+            break;
+        }
+
+        imageSize = view.size();  // Format input image.
+        if( s.flipVertical )    flip( view, view, 0 );
+
+        vector<Point2f> pointBuf;
+        bool found = findChessboardCorners( view, s.boardSize, pointBuf, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
+
+        if (found)
+        {
+            // improve the found corners' coordinate accuracy for chessboard
+            Mat viewGray;
+            cvtColor(view, viewGray, COLOR_BGR2GRAY);
+            cornerSubPix(viewGray, pointBuf, Size(11,11), Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
+
+            if(!s.inputCapture.isOpened() || clock() - prevTimestamp > s.delay*1e-3*CLOCKS_PER_SEC)
+            {
+                imagePoints.push_back(pointBuf);
+                prevTimestamp = clock();
+                blinkOutput = s.inputCapture.isOpened();
+            }
+
+            // Draw the corners.
+            drawChessboardCorners( view, s.boardSize, Mat(pointBuf), found );
+        }
+
+        //----------------------------- Output Text ------------------------------------------------
+        if (imagePoints.size() < s.nrFrames)
+            putText( view, format( "%d/%d", (int)imagePoints.size(), s.nrFrames ), Point(view.cols - 70, view.rows - 10), 1, 1, RED);
+        else
+            putText( view, format( "Calibrated" ), Point(view.cols - 100, view.rows - 10), 1, 1, GREEN);
+
+        if( blinkOutput )
+            bitwise_not(view, view);
+
+        //------------------------------ Show image and check for input commands -------------------
+        imshow("Image View", view);
+        char key = (char)waitKey(s.inputCapture.isOpened() ? 50 : s.delay);
+
+        if( key  == ESC_KEY )
+            break;
+
+        if( s.inputCapture.isOpened() && key == 'g' )
+            imagePoints.clear();
+    }
+}
+
+void CamCalibration::load(std::string filePath) {
+    FileStorage fs(filePath, FileStorage::READ); // Read the settings
+    fs["Distortion_Coefficients"] >> distCoeffs;
+    fs["Camera_Matrix"]  >> cameraMatrix;
 }

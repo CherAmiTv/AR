@@ -10,7 +10,7 @@
 
 static void* cam(void* arg){
     CamCalibration* c = (CamCalibration*) arg;
-    c->start();
+    c->calibrate();
 }
 
 class Framebuffer : public App {
