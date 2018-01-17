@@ -419,9 +419,9 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
     //~ printf("--\n%s", definitions.c_str());
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
-        m_program= read_program( smart_path("data/shaders/mesh.glsl"), definitions.c_str());
+        m_program= read_program( smart_path("data/mesh.glsl"), definitions.c_str());
     else
-        m_program= read_program( smart_path("data/shaders/mesh_color.glsl"), definitions.c_str());
+        m_program= read_program( smart_path("data/mesh_color.glsl"), definitions.c_str());
     return m_program;
 }
 
