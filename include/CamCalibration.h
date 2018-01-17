@@ -15,10 +15,22 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+
 class CamCalibration {
+
 public:
     CamCalibration();
-    void start();
+
+    cv::Mat getIntrinsicParameters();
+    cv::Mat getDistortionCoefficients() {return m_distCoeffs;}
+    cv::Mat getGlobalToCameraTransformation() {return m_cameraMatrix;}
+
+private :
+    std::vector<cv::Mat> v_m_rvecs;
+    std::vector<cv::Mat> v_m_tvecs;
+    cv::Mat m_distCoeffs;
+    cv::Mat m_cameraMatrix;
+
 };
 
 

@@ -6,7 +6,6 @@
 #include <draw.h>
 #include <pthread.h>
 #include "app.h"
-#include "vec.h"
 
 
 static void* cam(void* arg){

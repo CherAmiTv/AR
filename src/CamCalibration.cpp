@@ -218,10 +218,11 @@ static void read(const FileNode& node, Settings& x, const Settings& default_valu
 
 enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs,
+bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs,
                            vector<vector<Point2f> > imagePoints );
 
-void CamCalibration::start() {
+CamCalibration::CamCalibration(){
+
     help();
     Settings s;
     const string inputSettingsFile = "conf/in_VID5.xml";
@@ -239,7 +240,10 @@ void CamCalibration::start() {
     }
 
     vector<vector<Point2f> > imagePoints;
+
     Mat cameraMatrix, distCoeffs;
+    vector<Mat> rvecs, tvecs;
+
     Size imageSize;
     int mode = s.inputType == Settings::IMAGE_LIST ? CAPTURING : DETECTION;
     clock_t prevTimestamp = 0;
@@ -256,7 +260,7 @@ void CamCalibration::start() {
         //-----  If no more image, or got enough, then stop calibration and show result -------------
         if( mode == CAPTURING && imagePoints.size() >= (unsigned)s.nrFrames )
         {
-            if( runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints))
+            if( runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints))
                 mode = CALIBRATED;
             else
                 mode = DETECTION;
@@ -264,7 +268,7 @@ void CamCalibration::start() {
         if(view.empty())          // If no more images then run calibration, save and stop loop.
         {
             if( imagePoints.size() > 0 )
-                runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints);
+                runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints);
             break;
         }
 
@@ -380,10 +384,34 @@ void CamCalibration::start() {
         }
     }
 
+    v_m_rvecs = rvecs;
+    v_m_tvecs = tvecs;
+    m_distCoeffs = distCoeffs;
+    m_cameraMatrix = cameraMatrix;
 }
 
-CamCalibration::CamCalibration(){
+Mat CamCalibration::getIntrinsicParameters()
+{
+    Mat bigmat;
 
+    if( !v_m_rvecs.empty() && !v_m_tvecs.empty() )
+    {
+        CV_Assert(v_m_rvecs[0].type() == v_m_tvecs[0].type());
+        Mat bigmat((int)v_m_rvecs.size(), 6, v_m_rvecs[0].type());
+        for( int i = 0; i < (int)v_m_rvecs.size(); i++ )
+        {
+            Mat r = bigmat(Range(i, i+1), Range(0,3));
+            Mat t = bigmat(Range(i, i+1), Range(3,6));
+
+            CV_Assert(v_m_rvecs[i].rows == 3 && v_m_rvecs[i].cols == 1);
+            CV_Assert(v_m_tvecs[i].rows == 3 && v_m_tvecs[i].cols == 1);
+            //*.t() is MatExpr (not Mat) so we can use assignment operator
+            r = v_m_rvecs[i].t();
+            t = v_m_tvecs[i].t();
+        }
+    }
+
+    return bigmat;
 }
 
 static double computeReprojectionErrors( const vector<vector<Point3f> >& objectPoints,
@@ -545,14 +573,14 @@ static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, M
     }
 }
 
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs,vector<vector<Point2f> > imagePoints )
+bool runCalibrationAndSave(Settings& s, Size imageSize, Mat& cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs, vector<vector<Point2f> > imagePoints )
 {
-    vector<Mat> rvecs, tvecs;
     vector<float> reprojErrs;
     double totalAvgErr = 0;
 
     bool ok = runCalibration(s,imageSize, cameraMatrix, distCoeffs, imagePoints, rvecs, tvecs,
                              reprojErrs, totalAvgErr);
+
     cout << (ok ? "Calibration succeeded" : "Calibration failed")
          << ". avg re projection error = "  << totalAvgErr ;
 
