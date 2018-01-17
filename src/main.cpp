@@ -76,7 +76,7 @@ public:
     int render() {
         moveCam();
 
-        cv::Mat tmp = m_calibration->getGlobalToCameraTransformation();
+        cv::Mat tmp = m_calibration->getIntrinsicParametersMatrix();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

@@ -20,16 +20,16 @@ class CamCalibration {
 
 public:
     void start();
-    cv::Mat getIntrinsicParameters();
-    cv::Mat getDistortionCoefficients() {return distCoeffs;}
-    cv::Mat getGlobalToCameraTransformation() {return cameraMatrix;}
+    cv::Mat getIntrinsicParametersMatrix() {return cameraMatrix;}
+    cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
+    cv::Mat getRotationTransformMatrix(int i) {return rvecs.at(i);}
+    cv::Mat getTranslationTransformMatrix(int i) {return tvecs.at(i);}
 
 private :
-    std::vector<cv::Mat> rvecs;
-    std::vector<cv::Mat> tvecs;
-    cv::Mat distCoeffs;
-    cv::Mat cameraMatrix;
-
+    cv::Mat cameraMatrix;       // Intrinsic parameters
+    cv::Mat distCoeffs;         // Distortions coefficients
+    std::vector<cv::Mat> rvecs; // Rotations transform (transform the object point to the image point)
+    std::vector<cv::Mat> tvecs; // Translation transform (transform the object point to the image point)
 };
 
 
