@@ -22,14 +22,14 @@ public:
     CamCalibration();
 
     cv::Mat getIntrinsicParameters();
-    cv::Mat getDistortionCoefficients() {return m_distCoeffs;}
-    cv::Mat getGlobalToCameraTransformation() {return m_cameraMatrix;}
+    cv::Mat getDistortionCoefficients() {return distCoeffs;}
+    cv::Mat getGlobalToCameraTransformation() {return cameraMatrix;}
 
 private :
-    std::vector<cv::Mat> v_m_rvecs;
-    std::vector<cv::Mat> v_m_tvecs;
-    cv::Mat m_distCoeffs;
-    cv::Mat m_cameraMatrix;
+    std::vector<cv::Mat> rvecs;
+    std::vector<cv::Mat> tvecs;
+    cv::Mat distCoeffs;
+    cv::Mat cameraMatrix;
 
 };
 

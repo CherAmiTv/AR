@@ -241,9 +241,6 @@ CamCalibration::CamCalibration(){
 
     vector<vector<Point2f> > imagePoints;
 
-    Mat cameraMatrix, distCoeffs;
-    vector<Mat> rvecs, tvecs;
-
     Size imageSize;
     int mode = s.inputType == Settings::IMAGE_LIST ? CAPTURING : DETECTION;
     clock_t prevTimestamp = 0;
@@ -383,31 +380,26 @@ CamCalibration::CamCalibration(){
                 break;
         }
     }
-
-    v_m_rvecs = rvecs;
-    v_m_tvecs = tvecs;
-    m_distCoeffs = distCoeffs;
-    m_cameraMatrix = cameraMatrix;
 }
 
 Mat CamCalibration::getIntrinsicParameters()
 {
     Mat bigmat;
 
-    if( !v_m_rvecs.empty() && !v_m_tvecs.empty() )
+    if( !rvecs.empty() && !tvecs.empty() )
     {
-        CV_Assert(v_m_rvecs[0].type() == v_m_tvecs[0].type());
-        Mat bigmat((int)v_m_rvecs.size(), 6, v_m_rvecs[0].type());
-        for( int i = 0; i < (int)v_m_rvecs.size(); i++ )
+        CV_Assert(rvecs[0].type() == tvecs[0].type());
+        Mat bigmat((int)rvecs.size(), 6, rvecs[0].type());
+        for( int i = 0; i < (int)rvecs.size(); i++ )
         {
             Mat r = bigmat(Range(i, i+1), Range(0,3));
             Mat t = bigmat(Range(i, i+1), Range(3,6));
 
-            CV_Assert(v_m_rvecs[i].rows == 3 && v_m_rvecs[i].cols == 1);
-            CV_Assert(v_m_tvecs[i].rows == 3 && v_m_tvecs[i].cols == 1);
+            CV_Assert(rvecs[i].rows == 3 && rvecs[i].cols == 1);
+            CV_Assert(tvecs[i].rows == 3 && tvecs[i].cols == 1);
             //*.t() is MatExpr (not Mat) so we can use assignment operator
-            r = v_m_rvecs[i].t();
-            t = v_m_tvecs[i].t();
+            r = rvecs[i].t();
+            t = tvecs[i].t();
         }
     }
 
