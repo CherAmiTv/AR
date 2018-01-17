@@ -8,12 +8,16 @@
 
 #include <vector>
 #include <mat.h>
+#include <mesh.h>
 
-class Mire {
+class Mire : public Mesh{
 
 public:
+
+    Mire(int row, int col, float squareSize, Transform t);
+    Transform& getTransform(){return transform;}
+    void setTransform(const Transform& t){transform = t;}
 private:
-    std::vector<float> pos;
     Transform transform;
 };
 

@@ -18,7 +18,7 @@
 class CamCalibration {
 public:
     CamCalibration();
-
+    void start();
 };
 
 
