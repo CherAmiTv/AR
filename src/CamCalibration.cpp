@@ -384,8 +384,8 @@ CamCalibration::CamCalibration(){
         }
     }
 
-    //v_m_rvecs = rvecs;
-    //v_m_tvecs = tvecs;
+    v_m_rvecs = rvecs;
+    v_m_tvecs = tvecs;
     m_distCoeffs = distCoeffs;
     m_cameraMatrix = cameraMatrix;
 }
