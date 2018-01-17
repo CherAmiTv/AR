@@ -19,8 +19,7 @@
 class CamCalibration {
 
 public:
-    CamCalibration();
-
+    void start();
     cv::Mat getIntrinsicParameters();
     cv::Mat getDistortionCoefficients() {return distCoeffs;}
     cv::Mat getGlobalToCameraTransformation() {return cameraMatrix;}

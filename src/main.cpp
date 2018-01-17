@@ -42,7 +42,7 @@ public:
     }
 
     void camInit(){
-
+        m_calibration = new CamCalibration();
         pthread_create(&m_threads, NULL, cam, (void*)m_calibration);
 
 //        m_threads.push_back(std::thread(&Framebuffer::panda, this));
@@ -75,6 +75,9 @@ public:
     // dessiner une nouvelle image
     int render() {
         moveCam();
+
+        cv::Mat tmp = m_calibration->getGlobalToCameraTransformation();
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if(key_state(' '))
