@@ -221,8 +221,7 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs,
                            vector<vector<Point2f> > imagePoints );
 
-CamCalibration::CamCalibration(){
-
+void CamCalibration::start(){
     help();
     Settings s;
     const string inputSettingsFile = "conf/in_VID5.xml";
