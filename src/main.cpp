@@ -10,7 +10,7 @@
 
 static void* cam(void* arg){
     CamCalibration* c = (CamCalibration*) arg;
-    //c->start();
+    c->start();
 }
 
 class Framebuffer : public App {
@@ -22,7 +22,7 @@ protected:
     CamCalibration* m_calibration;
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    Framebuffer() : App(1024, 640), m_mire(6, 9, 1, Identity()) {}
+    Framebuffer() : App(640, 480), m_mire(6, 9, 1, Identity()) {}
 
     void moveCam(){
         int mx, my;
@@ -76,7 +76,21 @@ public:
     int render() {
         moveCam();
 
-        cv::Mat tmp = m_calibration->getIntrinsicParametersMatrix();
+        cv::Mat tmp = m_calibration->gettVec();
+
+        if(!tmp.empty()){
+            cv::Mat translation = m_calibration->gettVec();
+            cv::Vec3d rot = m_calibration->getRot();
+
+//            for(int i =0 ; i < 3; ++i)
+//                std::cout << translation.at<float>(i) << " ";
+//            std::cout << std::endl;
+
+            Transform t = Translation(10, 5, 0) * RotationX(-rot[0]) * RotationY(rot[1]) * RotationZ(-rot[2]);
+
+            m_mire.setTransform(t);
+
+        }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -97,6 +111,10 @@ int main(int argc, char **argv) {
 
     Framebuffer tp;
     tp.run();
+
+//    CamCalibration c;
+//    c.start();
+
 
     return 0;
 }
