@@ -78,6 +78,19 @@ public:
 
         cv::Mat tmp = m_calibration->getIntrinsicParametersMatrix();
 
+        if(!tmp.empty()){
+
+//            cv::Mat rot = m_calibration->getRotationTransformMatrix();
+//
+//            Transform t = Identity();
+//            for(int i = 0; i < 3; ++i)
+//                for(int j = 0; j < 3; ++j)
+//                    t.m[i][j] = rot.at<float>(i,j);
+//
+//            m_mire.setTransform(t);
+//
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if(key_state(' '))

@@ -22,7 +22,7 @@ public:
     void start();
     cv::Mat getIntrinsicParametersMatrix() {return cameraMatrix;}
     cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
-    cv::Mat getRotationTransformMatrix(int i) {return rvecs.at(i);}
+    cv::Mat getRotationTransformMatrix() {cv::Mat ret; cv::Rodrigues(rvecs[0], ret);return ret;}
     cv::Mat getTranslationTransformMatrix(int i) {return tvecs.at(i);}
 
 private :
@@ -30,6 +30,11 @@ private :
     cv::Mat distCoeffs;         // Distortions coefficients
     std::vector<cv::Mat> rvecs; // Rotations transform (transform the object point to the image point)
     std::vector<cv::Mat> tvecs; // Translation transform (transform the object point to the image point)
+
+    cv::Mat rvec;
+    cv::Mat tvec;
+
+
 };
 
 
