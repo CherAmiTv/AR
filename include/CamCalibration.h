@@ -26,6 +26,9 @@ public:
 private :
     cv::Mat cameraMatrix;       // Intrinsic parameters
     cv::Mat distCoeffs;         // Distortions coefficients
+    cv::Mat rotationMatrix;     // Matrix of rotation
+    cv::Mat translationMatrix;  // Matrix of translation
+
 
     void calibrate(); // Calibrate camera et write parameter
     void load(std::string filePath = "out_camera_data.xml"); // Load calibration parameters from a file
