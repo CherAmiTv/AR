@@ -373,9 +373,12 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
             Rodrigues(rvec, tmp);
             getEulerAngle(tmp, rot);
 
-            for(int i = 0; i < 3; ++i)
-                cout << tvec.at<float>(i) << " ";;
-            std::cout << std::endl;
+            tvec = -tmp.t() * tvec;
+
+
+//            for(int i = 0; i < 3; ++i)
+//                cout << tvec.at<float>(i) << " ";;
+//            std::cout << std::endl;
 
         }
         char key = (char)waitKey(50);

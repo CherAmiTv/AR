@@ -76,19 +76,19 @@ public:
     int render() {
         moveCam();
 
-        cv::Mat tmp = m_calibration->gettVec();
+        cv::Mat t = m_calibration->gettVec();
 
-        if(!tmp.empty()){
-            cv::Mat translation = m_calibration->gettVec();
+        if(!t.empty()){
+
             cv::Vec3d rot = m_calibration->getRot();
 
 //            for(int i =0 ; i < 3; ++i)
-//                std::cout << translation.at<float>(i) << " ";
+//                std::cout << t.at<double>(i) << " ";
 //            std::cout << std::endl;
 
-            Transform t = Translation(10, 5, 0) * RotationX(-rot[0]) * RotationY(rot[1]) * RotationZ(-rot[2]);
+            Transform t2 = RotationX(rot[0]) * RotationY(-rot[1]) * RotationZ(-rot[2]);
 
-            m_mire.setTransform(t);
+            m_mire.setTransform(t2);
 
         }
 

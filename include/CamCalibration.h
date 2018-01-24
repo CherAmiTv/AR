@@ -24,7 +24,7 @@ public:
     cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
 
     cv::Vec3d getRot()const{return rot;}
-    cv::Mat gettVec()const{return transform;}
+    cv::Mat gettVec()const{return tvec;}
 
 
 private :
