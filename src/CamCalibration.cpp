@@ -257,172 +257,127 @@ vector<cv::Point3f> get3dPoints(){
     return points;
 }
 
-//void CamCalibration::start(){
-//    help();
-//    Settings s;
-//    const string inputSettingsFile = "conf/in_VID5.xml";
-//    FileStorage fs(inputSettingsFile, FileStorage::READ); // Read the settings
-//    if (!fs.isOpened())
-//    {
-//        cout << "Could not open the configuration file: \"" << inputSettingsFile << "\"" << endl;
-//    }
-//    fs["Settings"] >> s;
-//    fs.release();                                         // close Settings file
-//
-//    if (!s.goodInput)
-//    {
-//        cout << "Invalid input detected. Application stopping. " << endl;
-//    }
-//
-//    vector<vector<Point2f> > imagePoints;
-//    vector<cv::Point3f> objectPoints = get3dPoints();
-//
-//    Size imageSize;
-//    int mode = s.inputType == Settings::IMAGE_LIST ? CAPTURING : DETECTION;
-//    clock_t prevTimestamp = 0;
-//    const Scalar RED(0,0,255), GREEN(0,255,0);
-//    const char ESC_KEY = 27;
-//
-//    for(int i = 0;;++i)
-//    {
-//        Mat view;
-//        bool blinkOutput = false;
-//
-//        view = s.nextImage();
-//
-//        //-----  If no more image, or got enough, then stop calibration and show result -------------
-//        if( mode == CAPTURING && imagePoints.size() >= (unsigned)s.nrFrames )
-//        {
-//            if( runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints))
-//                mode = CALIBRATED;
-//            else
-//                mode = DETECTION;
-//        }
-//        if(view.empty())          // If no more images then run calibration, save and stop loop.
-//        {
-//            if( imagePoints.size() > 0 )
-//                runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints);
-//            break;
-//        }
-//
-//
-//        imageSize = view.size();  // Format input image.
-//        if( s.flipVertical )    flip( view, view, 0 );
-//
-//        vector<Point2f> pointBuf;
-//
-//        bool found;
-//        switch( s.calibrationPattern ) // Find feature points on the input format
-//        {
-//            case Settings::CHESSBOARD:
-//                found = findChessboardCorners( view, s.boardSize, pointBuf,
-//                                               CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-//                break;
-//            default:
-//                found = false;
-//                break;
-//        }
-//
-//        if ( found)                // If done with success,
-//        {
-//            // improve the found corners' coordinate accuracy for chessboard
-//            if( s.calibrationPattern == Settings::CHESSBOARD)
-//            {
-//                Mat viewGray;
-//                cvtColor(view, viewGray, COLOR_BGR2GRAY);
-//                cornerSubPix( viewGray, pointBuf, Size(11,11),
-//                              Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-//            }
-//
-//            if( mode == CAPTURING &&  // For camera only take new samples after delay time
-//                (!s.inputCapture.isOpened() || clock() - prevTimestamp > s.delay*1e-3*CLOCKS_PER_SEC) )
-//            {
-//                imagePoints.push_back(pointBuf);
-//                prevTimestamp = clock();
-//                blinkOutput = s.inputCapture.isOpened();
-//            }
-//
-//            // Draw the corners.
-//            drawChessboardCorners( view, s.boardSize, Mat(pointBuf), found );
-//        }
-//
-//        //----------------------------- Output Text ------------------------------------------------
-//        string msg = (mode == CAPTURING) ? "100/100" :
-//                     mode == CALIBRATED ? "Calibrated" : "Press 'g' to start";
-//        int baseLine = 0;
-//        Size textSize = getTextSize(msg, 1, 1, 1, &baseLine);
-//        Point textOrigin(view.cols - 2*textSize.width - 10, view.rows - 2*baseLine - 10);
-//
-//        if( mode == CAPTURING )
-//        {
-//            if(s.showUndistorsed)
-//                msg = format( "%d/%d Undist", (int)imagePoints.size(), s.nrFrames );
-//            else
-//                msg = format( "%d/%d", (int)imagePoints.size(), s.nrFrames );
-//        }
-//
-//        putText( view, msg, textOrigin, 1, 1, mode == CALIBRATED ?  GREEN : RED);
-//
-//        if( blinkOutput )
-//            bitwise_not(view, view);
-//
-//        //------------------------- Video capture  output  undistorted ------------------------------
-//
-//
-//        if(mode == CALIBRATED){
-//
-//            vector<Point2f> pointImg;
-//            if(findChessboardCorners( view, s.boardSize, pointImg,
-//                                           CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE)) {
-//
-//
-//                cv::solvePnP(objectPoints, pointImg, cameraMatrix, distCoeffs, rvec, tvec);
-//
-//                std::cout << "rvec: " << rvec << std::endl;
-//                std::cout << "tvec: " << tvec << std::endl;
-//            }
-//        }
-//
-//        if( mode == CALIBRATED && s.showUndistorsed )
-//        {
-//            Mat temp = view.clone();
-//            undistort(temp, view, cameraMatrix, distCoeffs);
-//        }
-//
-//        //------------------------------ Show image and check for input commands -------------------
-//        imshow("Image View", view);
-//        char key = (char)waitKey(s.inputCapture.isOpened() ? 50 : s.delay);
-//
-//        if( key  == ESC_KEY )
-//            break;
-//
-//        if( key == 'u' && mode == CALIBRATED )
-//            s.showUndistorsed = !s.showUndistorsed;
-//
-//        if( s.inputCapture.isOpened() && key == 'g' )
-//        {
-//            mode = CAPTURING;
-//            imagePoints.clear();
-//        }
-//    }
-//}
-void CamCalibration::start() {
+void CamCalibration::calibrate() {
+
+    Settings s;
+    const string inputSettingsFile = "conf/in_VID5.xml";
+    FileStorage fs(inputSettingsFile, FileStorage::READ); // Read the settings
+    if (!fs.isOpened())
+    {
+        cout << "Could not open the configuration file: \"" << inputSettingsFile << "\"" << endl;
+    }
+    fs["Settings"] >> s;
+    fs.release();                                         // close Settings file
+
+    if (!s.goodInput)
+    {
+        cout << "Invalid input detected. Application stopping. " << endl;
+    }
+
+    vector<vector<Point2f> > imagePoints;
+
+    Size imageSize;
+    clock_t prevTimestamp = 0;
+    const Scalar RED(0,0,255), GREEN(0,255,0);
+    const char ESC_KEY = 27;
+
+    std::vector<cv::Mat> rvecs;
+    std::vector<cv::Mat> tvecs;
+
+    while(true)
+    {
+        Mat view;
+        bool blinkOutput = false;
+        view = s.nextImage();
+
+        //-----  If got enough image, then stop calibration-------------
+        if(imagePoints.size() >= (unsigned)s.nrFrames) {
+            runCalibrationAndSave(s, imageSize, cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints);
+            break;
+        }
+
+        imageSize = view.size();  // Format input image.
+        if( s.flipVertical )    flip( view, view, 0 );
+
+        vector<Point2f> pointBuf;
+        bool found = findChessboardCorners( view, s.boardSize, pointBuf, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
+
+        if (found)
+        {
+            // improve the found corners' coordinate accuracy for chessboard
+            Mat viewGray;
+            cvtColor(view, viewGray, COLOR_BGR2GRAY);
+            cornerSubPix(viewGray, pointBuf, Size(11,11), Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
+
+            if(!s.inputCapture.isOpened() || clock() - prevTimestamp > s.delay*1e-3*CLOCKS_PER_SEC)
+            {
+                imagePoints.push_back(pointBuf);
+                prevTimestamp = clock();
+                blinkOutput = s.inputCapture.isOpened();
+            }
+
+            // Draw the corners.
+            drawChessboardCorners( view, s.boardSize, Mat(pointBuf), found );
+        }
+
+        //----------------------------- Output Text ------------------------------------------------
+        if (imagePoints.size() < s.nrFrames)
+            putText( view, format( "%d/%d", (int)imagePoints.size(), s.nrFrames ), Point(view.cols - 70, view.rows - 10), 1, 1, RED);
+        else
+            putText( view, format( "Calibrated" ), Point(view.cols - 100, view.rows - 10), 1, 1, GREEN);
+
+        if( blinkOutput )
+            bitwise_not(view, view);
+
+        //------------------------------ Show image and check for input commands -------------------
+        imshow("Image View", view);
+        char key = (char)waitKey(s.inputCapture.isOpened() ? 50 : s.delay);
+
+        if( key  == ESC_KEY )
+            break;
+
+        if( s.inputCapture.isOpened() && key == 'g' )
+            imagePoints.clear();
+    }
+}
+
+void CamCalibration::load(std::string filePath) {
+    FileStorage fs(filePath, FileStorage::READ); // Read the settings
+    fs["Distortion_Coefficients"] >> distCoeffs;
+    fs["Camera_Matrix"]  >> cameraMatrix;
+}
+
+void CamCalibration::start(std::string filePath, bool needCalibration) {
+
+    if(!needCalibration)
+        load();
+    else
+        calibrate();
+
     VideoCapture cam(0);
     Mat view;
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
-    std::vector<Point3f> pointMire;
+    std::vector<Point3f> pointMire = initPoint3D(7, 4, 3.5);
 
-    Mat rvec;
-    Mat tvec;
+    Mat tmp;
 
     bool flag = false;
-    for(;;){
+    for(;;) {
         cam >> view;
-        flag = findChessboardCorners( view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-        if(flag)
-            cv::solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec);
+        flag = findChessboardCorners(view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK |
+                                                          CV_CALIB_CB_NORMALIZE_IMAGE);
+        if (flag) {
+            drawChessboardCorners(view, s, Mat(pointImage), flag);
+            solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec);
+            Rodrigues(rvec, tmp);
+            getEulerAngle(tmp, rot);
 
+            for(int i = 0; i < 3; ++i)
+                cout << tvec.at<float>(i) << " ";;
+            std::cout << std::endl;
+
+        }
         char key = (char)waitKey(50);
 
         if( key  == 27 )
@@ -431,8 +386,25 @@ void CamCalibration::start() {
     }
 
 
-
     cam.release();
+}
+
+void CamCalibration::getEulerAngle(Mat &rotCamerMatrix,Vec3d &eulerAngles){
+
+    Mat cameraMatrix,rotMatrix,transVect,rotMatrixX,rotMatrixY,rotMatrixZ;
+    double* _r = rotCamerMatrix.ptr<double>();
+    double projMatrix[12] = {_r[0],_r[1],_r[2],0,
+                             _r[3],_r[4],_r[5],0,
+                             _r[6],_r[7],_r[8],0};
+
+    decomposeProjectionMatrix( Mat(3,4,CV_64FC1,projMatrix),
+                               cameraMatrix,
+                               rotMatrix,
+                               transVect,
+                               rotMatrixX,
+                               rotMatrixY,
+                               rotMatrixZ,
+                               eulerAngles);
 }
 
 static double computeReprojectionErrors( const vector<vector<Point3f> >& objectPoints,
@@ -609,4 +581,22 @@ bool runCalibrationAndSave(Settings& s, Size imageSize, Mat& cameraMatrix, Mat& 
         saveCameraParams( s, imageSize, cameraMatrix, distCoeffs, rvecs ,tvecs, reprojErrs,
                           imagePoints, totalAvgErr);
     return ok;
+}
+
+std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize) {
+
+    std::vector<cv::Point3f> ret;
+
+    for(int i = 0; i < y; ++i) {
+        for (int j = 0; j < x; ++j) {
+            Point3f tmp;
+            tmp.x = j*squareSize;
+            tmp.y = i*squareSize;
+            tmp.z = 0;
+
+            ret.push_back(tmp);
+        }
+    }
+
+    return ret;
 }
