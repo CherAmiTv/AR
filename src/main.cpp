@@ -61,7 +61,7 @@ public:
         glClearColor(0.2, 0.2, 0.2, 1.f);
         glDepthFunc(GL_LESS);
         glEnable(GL_DEPTH_TEST);
-        glFrontFace(GL_CW);
+        glFrontFace(GL_CCW);
         return 0;   // ras, pas d'erreur
     }
 
