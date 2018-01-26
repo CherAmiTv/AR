@@ -22,5 +22,5 @@ file(GLOB SRC src/*.cpp include/*.h)
 add_executable(AR ${SRC} ${GKIT})
 target_link_libraries (AR ${OpenCV_LIBS} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} ${GLEW_LIBRARY})
 
-add_executable(toto Test/test.cpp)
-target_link_libraries(toto ${OpenCV_LIBS})
+add_executable(calibrage Calibrage/calibre.cpp)
+target_link_libraries(calibrage ${OpenCV_LIBS})

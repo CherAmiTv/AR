@@ -20,9 +20,7 @@
 class CamCalibration {
 
 public:
-    void start(std::string filePath = "out_camera_data.xml", bool needCalibration = false); // Call load
-    cv::Mat getIntrinsicParametersMatrix() {return cameraMatrix;}
-    cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
+    void start(std::string filePath = "out_camera_data.xml"); // Call load
 
     cv::Vec3d getRot()const{return euler;}
     cv::Mat gettVec()const{return transform;}
@@ -46,7 +44,7 @@ private :
     Transform lookat(const cv::Vec3f eye, const cv::Vec3f center, const cv::Vec3f up);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);
     void calibrate(); // Calibrate camera et write parameter
-    void load(std::string filePath = "out_camera_data.xml"); // Load calibration parameters from a file
+    bool load(std::string filePath = "out_camera_data.xml"); // Load calibration parameters from a file
     void getEulerAngle(cv::Mat &rotCamerMatrix,cv::Vec3d &eulerAngles);
     void computeFrustum();
     void computeTransform(cv::Mat rodri, cv::Mat translation);
