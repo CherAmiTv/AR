@@ -223,40 +223,6 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs,
                            vector<vector<Point2f> > imagePoints );
 
-
-vector<cv::Point3f> get3dPoints(){
-    std::vector<cv::Point3f> points;
-    float x,y,z;
-
-    x=.5;y=.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=.5;y=.5;z=.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=.5;z=.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=.5;y=-.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=-.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=-.5;z=.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    for(unsigned int i = 0; i < points.size(); ++i)
-    {
-        std::cout << points[i] << std::endl;
-    }
-
-    return points;
-}
-
 void CamCalibration::calibrate() {
 
     Settings s;
@@ -374,7 +340,7 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
             getEulerAngle(tmp, rot);
 
             for(int i = 0; i < 3; ++i)
-                cout << tvec.at<float>(i) << " ";;
+                cout << tvec.at<double>(i) << " ";;
             std::cout << std::endl;
 
         }

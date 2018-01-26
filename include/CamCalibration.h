@@ -26,13 +26,11 @@ public:
     cv::Vec3d getRot()const{return rot;}
     cv::Mat gettVec()const{return transform;}
 
-
 private :
     cv::Mat cameraMatrix;       // Intrinsic parameters
     cv::Mat distCoeffs;         // Distortions coefficients
     cv::Mat rotationMatrix;     // Matrix of rotation
     cv::Mat translationMatrix;  // Matrix of translation
-
 
     cv::Mat rvec;
     cv::Mat tvec;
