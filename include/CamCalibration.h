@@ -17,10 +17,12 @@
 #include <mat.h>
 
 
+const std::string calibrationFileName = "out_camera_data.xml";
+
 class CamCalibration {
 
 public:
-    void start(std::string filePath = "out_camera_data.xml", bool needCalibration = false); // Call load
+    void start(std::string filePath = calibrationFileName, bool needCalibration = false); // Call load
     cv::Mat getIntrinsicParametersMatrix() {return cameraMatrix;}
     cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
 
@@ -41,10 +43,9 @@ private :
     cv::Vec3d rot;
     cv::Mat transform;
 
-    void getTransformMat(cv::Mat rot, cv::Mat tvec, cv::Mat& res);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);
     void calibrate(); // Calibrate camera et write parameter
-    void load(std::string filePath = "out_camera_data.xml"); // Load calibration parameters from a file
+    void load(std::string filePath = calibrationFileName); // Load calibration parameters from a file
     void getEulerAngle(cv::Mat &rotCamerMatrix,cv::Vec3d &eulerAngles);
     void computeFrustum();
     void computeTransform(cv::Mat rodri, cv::Mat translation);

@@ -12,13 +12,6 @@
 using namespace cv;
 using namespace std;
 
-static void help()
-{
-    cout <<  "This is a camera calibration sample." << endl
-         <<  "Usage: calibration configurationFile"  << endl
-         <<  "Near the sample file you'll find the configuration file, which has detailed help of "
-                 "how to edit it.  It may be any OpenCV supported file format XML/YAML." << endl;
-}
 class Settings
 {
 public:
@@ -69,8 +62,6 @@ public:
     }
     void interprate()
     {
-
-
         goodInput = true;
         if (boardSize.width <= 0 || boardSize.height <= 0)
         {
@@ -79,9 +70,7 @@ public:
         }
         if (squareSize <= 10e-6)
         {
-//            squareSize
             cerr << "Invalid square size " << squareSize << endl;
-//            goodInput = false;
         }
         if (nrFrames <= 0)
         {
@@ -225,39 +214,6 @@ bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat&
                            vector<vector<Point2f> > imagePoints );
 
 
-vector<cv::Point3f> get3dPoints(){
-    std::vector<cv::Point3f> points;
-    float x,y,z;
-
-    x=.5;y=.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=.5;y=.5;z=.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=.5;z=.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=.5;y=-.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=-.5;z=-.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    x=-.5;y=-.5;z=.5;
-    points.push_back(cv::Point3f(x,y,z));
-
-    for(unsigned int i = 0; i < points.size(); ++i)
-    {
-        std::cout << points[i] << std::endl;
-    }
-
-    return points;
-}
-
 void CamCalibration::calibrate() {
 
     Settings s;
@@ -320,12 +276,6 @@ void CamCalibration::calibrate() {
             // Draw the corners.
             drawChessboardCorners( view, s.boardSize, Mat(pointBuf), found );
         }
-
-        //----------------------------- Output Text ------------------------------------------------
-//        if (imagePoints.size() < s.nrFrames)
-//            putText( view, format( "%d/%d", (int)imagePoints.size(), s.nrFrames ), Point(view.cols - 70, view.rows - 10), 1, 1, RED);
-//        else
-//            putText( view, format( "Calibrated" ), Point(view.cols - 100, view.rows - 10), 1, 1, GREEN);
 
         if( blinkOutput )
             bitwise_not(view, view);
@@ -497,28 +447,13 @@ static double computeReprojectionErrors( const vector<vector<Point3f> >& objectP
     return std::sqrt(totalErr/totalPoints);
 }
 
-static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Point3f>& corners,
-                                     Settings::Pattern patternType /*= Settings::CHESSBOARD*/)
+static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Point3f>& corners)
 {
     corners.clear();
 
-    switch(patternType)
-    {
-        case Settings::CHESSBOARD:
-        case Settings::CIRCLES_GRID:
-            for( int i = 0; i < boardSize.height; ++i )
-                for( int j = 0; j < boardSize.width; ++j )
-                    corners.push_back(Point3f(float( j*squareSize ), float( i*squareSize ), 0));
-            break;
-
-        case Settings::ASYMMETRIC_CIRCLES_GRID:
-            for( int i = 0; i < boardSize.height; i++ )
-                for( int j = 0; j < boardSize.width; j++ )
-                    corners.push_back(Point3f(float((2*j + i % 2)*squareSize), float(i*squareSize), 0));
-            break;
-        default:
-            break;
-    }
+    for( int i = 0; i < boardSize.height; ++i )
+        for( int j = 0; j < boardSize.width; ++j )
+            corners.push_back(Point3f(float( j*squareSize ), float( i*squareSize ), 0));
 }
 
 static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat& distCoeffs,
@@ -533,7 +468,7 @@ static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat
     distCoeffs = Mat::zeros(8, 1, CV_64F);
 
     vector<vector<Point3f> > objectPoints(1);
-    calcBoardCornerPositions(s.boardSize, s.squareSize, objectPoints[0], s.calibrationPattern);
+    calcBoardCornerPositions(s.boardSize, s.squareSize, objectPoints[0]);
 
     objectPoints.resize(imagePoints.size(),objectPoints[0]);
 
@@ -663,18 +598,6 @@ std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize)
     }
 
     return ret;
-}
-
-void CamCalibration::getTransformMat(cv::Mat rot, cv::Mat tvec, cv::Mat &res) {
-    res = Mat::ones(3, 4, CV_64F);
-
-    for(int i = 0; i < 3; ++i)
-        for(int j = 0; j < 3; ++j)
-            res.at<double>(j,i) = rot.at<double>(j,i);
-
-    for(int i = 0; i < 3; ++i)
-        res.at<double>(3, i) = tvec.at<double>(i);
-
 }
 
 void CamCalibration::computeTransform(cv::Mat rodri, cv::Mat translation) {
