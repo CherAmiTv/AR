@@ -3,6 +3,7 @@
 //
 
 #include "Mire.h"
+#include "wavefront.h"
 
 Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) {
 
@@ -33,6 +34,31 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
 
     for(int i = 0; i < indices.size(); i++) {
         vertex(tmp[indices[i]]);
+        color(1,1,1);
+    }
+
+    transform = t;
+}
+
+Object::Object(Transform t, std::string filename) {
+
+    Mesh mesh = read_mesh(filename.c_str());
+    if(mesh == Mesh::error()) exit(0);
+
+    std::vector<TriangleData> tmp_triangle;
+    std::vector<vec3> tmp_vec3;
+
+    for(int i= 0; i < mesh.triangle_count(); i++)
+        tmp_triangle.push_back( mesh.triangle(i) );
+
+    for(int i= 0; i < tmp_triangle.size(); i++) {
+        tmp_vec3.push_back(tmp_triangle[i].a);
+        tmp_vec3.push_back(tmp_triangle[i].b);
+        tmp_vec3.push_back(tmp_triangle[i].c);
+    }
+
+    for(int i = 0; i < tmp_vec3.size(); i++) {
+        vertex(tmp_vec3[i]);
         color(1,1,1);
     }
 
