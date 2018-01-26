@@ -2,6 +2,7 @@
 // Created by julien on 10/01/18.
 //
 
+#include <window.h>
 #include "CamCalibration.h"
 
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -223,6 +224,40 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs,
                            vector<vector<Point2f> > imagePoints );
 
+
+vector<cv::Point3f> get3dPoints(){
+    std::vector<cv::Point3f> points;
+    float x,y,z;
+
+    x=.5;y=.5;z=-.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    x=.5;y=.5;z=.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    x=-.5;y=.5;z=.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    x=-.5;y=.5;z=-.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    x=.5;y=-.5;z=-.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    x=-.5;y=-.5;z=-.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    x=-.5;y=-.5;z=.5;
+    points.push_back(cv::Point3f(x,y,z));
+
+    for(unsigned int i = 0; i < points.size(); ++i)
+    {
+        std::cout << points[i] << std::endl;
+    }
+
+    return points;
+}
+
 void CamCalibration::calibrate() {
 
     Settings s;
@@ -287,10 +322,10 @@ void CamCalibration::calibrate() {
         }
 
         //----------------------------- Output Text ------------------------------------------------
-        if (imagePoints.size() < s.nrFrames)
-            putText( view, format( "%d/%d", (int)imagePoints.size(), s.nrFrames ), Point(view.cols - 70, view.rows - 10), 1, 1, RED);
-        else
-            putText( view, format( "Calibrated" ), Point(view.cols - 100, view.rows - 10), 1, 1, GREEN);
+//        if (imagePoints.size() < s.nrFrames)
+//            putText( view, format( "%d/%d", (int)imagePoints.size(), s.nrFrames ), Point(view.cols - 70, view.rows - 10), 1, 1, RED);
+//        else
+//            putText( view, format( "Calibrated" ), Point(view.cols - 100, view.rows - 10), 1, 1, GREEN);
 
         if( blinkOutput )
             bitwise_not(view, view);
@@ -313,12 +348,77 @@ void CamCalibration::load(std::string filePath) {
     fs["Camera_Matrix"]  >> cameraMatrix;
 }
 
+
+void CamCalibration::computeFrustum() {
+    invCameraMatrix = Mat::ones(3, 3, CV_64F);
+    invert(cameraMatrix, invCameraMatrix);
+    Mat xmin, xmax, ymin, ymax;
+    Mat a, b, c, d;
+
+    xmin = Mat::ones(3, 1, CV_64F);
+    xmax = Mat::ones(3, 1, CV_64F);
+    ymin = Mat::ones(3, 1, CV_64F);
+    ymax = Mat::ones(3, 1, CV_64F);
+
+    a = Mat::ones(3, 1, CV_64F);
+    b = Mat::ones(3, 1, CV_64F);
+    c = Mat::ones(3, 1, CV_64F);
+    d = Mat::ones(3, 1, CV_64F);
+
+    xmin.at<double>(0) = 0;
+    xmin.at<double>(1) = -(window_height() / 2);
+
+    xmax.at<double>(0) = window_width();
+    xmax.at<double>(1) = (window_height() / 2);
+
+    ymin.at<double>(0) = window_width() / 2;
+    ymin.at<double>(1) = 0;
+
+    ymax.at<double>(0) = window_width() / 2;
+    ymax.at<double>(1) = window_height();
+
+    a = invCameraMatrix * xmin;
+    b = invCameraMatrix * ymax;
+    c = invCameraMatrix * xmax;
+    d = invCameraMatrix * ymin;
+
+    double near = 0.1;
+    double far = 1000.0;
+
+    a = a * near; //left
+    b = b * near; //top
+    c = c * near; //right
+    d = d * near; //bot
+
+    double distX = norm(c - a);
+    double distY = norm(b - d);
+
+    double left = -distX/2;
+    double right = distX/2;
+    double top = distY/2;
+    double bot = -distX/2;
+
+    frustum.m[0][0] = (2*near)/ distX;
+    frustum.m[0][2] = (right+left)/(distX);
+
+    frustum.m[1][1] = (2*near) / distY;
+    frustum.m[1][2] = (top+bot)/(distY);
+
+    frustum.m[2][2] = -((far+near)/(far-near));
+    frustum.m[2][3] = -((2*(far*near))/(far-near));
+
+    frustum.m[3][2] = -1;
+
+}
+
 void CamCalibration::start(std::string filePath, bool needCalibration) {
 
     if(!needCalibration)
         load();
     else
         calibrate();
+
+    computeFrustum();
 
     VideoCapture cam(0);
     Mat view;
@@ -327,22 +427,20 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
     std::vector<Point3f> pointMire = initPoint3D(7, 4, 3.5);
 
     Mat tmp;
-
-    bool flag = false;
+    bool flag;
+    bool first = false;
     for(;;) {
         cam >> view;
-        flag = findChessboardCorners(view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK |
-                                                          CV_CALIB_CB_NORMALIZE_IMAGE);
+        flag = findChessboardCorners(view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
         if (flag) {
             drawChessboardCorners(view, s, Mat(pointImage), flag);
-            solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec);
+
+            solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec, first, CV_EPNP);
             Rodrigues(rvec, tmp);
+            computeTransform(tmp, tvec);
+
             getEulerAngle(tmp, rot);
-
-            for(int i = 0; i < 3; ++i)
-                cout << tvec.at<double>(i) << " ";;
-            std::cout << std::endl;
-
+            transform = tvec;
         }
         char key = (char)waitKey(50);
 
@@ -566,3 +664,29 @@ std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize)
 
     return ret;
 }
+
+void CamCalibration::getTransformMat(cv::Mat rot, cv::Mat tvec, cv::Mat &res) {
+    res = Mat::ones(3, 4, CV_64F);
+
+    for(int i = 0; i < 3; ++i)
+        for(int j = 0; j < 3; ++j)
+            res.at<double>(j,i) = rot.at<double>(j,i);
+
+    for(int i = 0; i < 3; ++i)
+        res.at<double>(3, i) = tvec.at<double>(i);
+
+}
+
+void CamCalibration::computeTransform(cv::Mat rodri, cv::Mat translation) {
+
+    for(int i = 0; i < 3; ++i)
+        for(int j = 0; j < 3; ++j)
+            transformation.m[i][j] = rodri.at<double>(j,i);
+
+    for(int i = 0; i < 2; ++i)
+        transformation.m[i][3] = translation.at<double>(i);
+
+    transformation.m[2][3] = -translation.at<double>(2);
+
+}
+
