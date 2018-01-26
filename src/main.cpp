@@ -6,11 +6,19 @@
 #include <draw.h>
 #include <pthread.h>
 #include "app.h"
-
+#include <fstream>
 
 static void* cam(void* arg){
     CamCalibration* c = (CamCalibration*) arg;
-    c->start();
+    // Verifie si le fichier de calibration existe
+    // Sinon en genere un nouveau
+    std::ifstream calibrationFile(calibrationFileName);
+    if(calibrationFile.good()) {
+        calibrationFile.close();
+        c->start();
+    }else {
+        c->start(calibrationFileName, true);
+    }
 }
 
 class Framebuffer : public App {
@@ -47,7 +55,6 @@ public:
         m_calibration = new CamCalibration();
         pthread_create(&m_threads, NULL, cam, (void*)m_calibration);
 
-//        m_threads.push_back(std::thread(&Framebuffer::panda, this));
     }
 
     int init() {
@@ -58,7 +65,6 @@ public:
 
         Point min(0,0, -1);
         Point max(7*3.5,4*3.5, -1);
-//        m_mire.bounds(min, max);
         m_camera.lookat(min, max);
         glClearColor(0.2, 0.2, 0.2, 1.f);
         glDepthFunc(GL_LESS);
@@ -84,10 +90,6 @@ public:
 
             cv::Vec3d rot = m_calibration->getRot();
 
-//            for(int i =0 ; i < 2; ++i)
-//                std::cout << t.at<double>(i) << " ";
-//            std::cout << std::endl;
-
             Vector transform = Vector(t.at<double>(0), -t.at<double>(1), -t.at<double>(2));
 
             Transform t2 = Translation(transform) * RotationX(rot[0]) * RotationY(-rot[1]) * RotationZ(-rot[2]);
@@ -110,8 +112,6 @@ public:
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-//        draw(m_mire, m_mire.getTransform(), m_camera);
-        //Probleme look at repere gl/cv
         draw(m_object, m_calibration->getTransform(), m_camera.view(), m_calibration->getProjection());
 
         return 1;
@@ -124,10 +124,6 @@ int main(int argc, char **argv) {
 
     Framebuffer tp;
     tp.run();
-
-//    CamCalibration c;
-//    c.start();
-
 
     return 0;
 }
