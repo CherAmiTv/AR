@@ -16,13 +16,15 @@ static void* cam(void* arg){
 class Framebuffer : public App {
 protected:
     Orbiter m_camera;
-    Mire m_mire;
+    //Mire m_mire;
+    Object m_object;
     pthread_t m_threads;
     float camSpeed = 10;
     CamCalibration* m_calibration;
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    Framebuffer() : App(640, 480), m_mire(4, 7, 3.5, Identity()) {}
+    //Framebuffer() : App(640, 480), m_mire(4, 7, 3.5, Identity()) {}
+    Framebuffer() : App(640, 480), m_object(Identity()) {}
 
     void moveCam(){
         int mx, my;
@@ -90,7 +92,9 @@ public:
 
             Transform t2 = Translation(transform) * RotationX(rot[0]) * RotationY(-rot[1]) * RotationZ(-rot[2]);
 
-            m_mire.setTransform(t2);
+            //m_mire.setTransform(t2);
+
+            m_object.setTransform(t2);
 
             Transform t3 = m_calibration->getTransform();
             std::cout << transform << std::endl;
@@ -108,7 +112,7 @@ public:
 
 //        draw(m_mire, m_mire.getTransform(), m_camera);
         //Probleme look at repere gl/cv
-        draw(m_mire, m_calibration->getTransform(), m_camera.view(), m_calibration->getProjection());
+        draw(m_object, m_calibration->getTransform(), m_camera.view(), m_calibration->getProjection());
 
         return 1;
     }
