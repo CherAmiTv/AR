@@ -24,12 +24,14 @@ public:
     cv::Mat getIntrinsicParametersMatrix() {return cameraMatrix;}
     cv::Mat getDistortionCoefficientsMatrix() {return distCoeffs;}
 
-    cv::Vec3d getRot()const{return rot;}
+    cv::Vec3d getRot()const{return euler;}
     cv::Mat gettVec()const{return transform;}
     Transform getProjection()const{ return frustum;}
     Transform getTransform()const{return transformation;};
+    Transform getView()const{return view;};
 
 private :
+    Transform view;
     cv::Mat invCameraMatrix;
     cv::Mat cameraMatrix;       // Intrinsic parameters
     cv::Mat distCoeffs;         // Distortions coefficients
@@ -38,10 +40,10 @@ private :
     cv::Mat rvec;
     cv::Mat tvec;
 
-    cv::Vec3d rot;
+    cv::Vec3d euler;
     cv::Mat transform;
 
-    void getTransformMat(cv::Mat rot, cv::Mat tvec, cv::Mat& res);
+    Transform lookat(const cv::Vec3f eye, const cv::Vec3f center, const cv::Vec3f up);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);
     void calibrate(); // Calibrate camera et write parameter
     void load(std::string filePath = "out_camera_data.xml"); // Load calibration parameters from a file

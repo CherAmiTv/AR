@@ -348,7 +348,6 @@ void CamCalibration::load(std::string filePath) {
     fs["Camera_Matrix"]  >> cameraMatrix;
 }
 
-
 void CamCalibration::computeFrustum() {
     invCameraMatrix = Mat::ones(3, 3, CV_64F);
     invert(cameraMatrix, invCameraMatrix);
@@ -366,7 +365,7 @@ void CamCalibration::computeFrustum() {
     d = Mat::ones(3, 1, CV_64F);
 
     xmin.at<double>(0) = 0;
-    xmin.at<double>(1) = -(window_height() / 2);
+    xmin.at<double>(1) = (window_height() / 2);
 
     xmax.at<double>(0) = window_width();
     xmax.at<double>(1) = (window_height() / 2);
@@ -409,6 +408,12 @@ void CamCalibration::computeFrustum() {
 
     frustum.m[3][2] = -1;
 
+    Vec3f eye = {0.f, 0.f, 0.f};
+    Vec3f center = {0.f, 0.f, 10.f};
+    Vec3f up = {0.f, -1.f, 0.f};
+
+    view = lookat(eye, center, up);
+    view = Transpose(view);
 }
 
 void CamCalibration::start(std::string filePath, bool needCalibration) {
@@ -424,9 +429,9 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
     Mat view;
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
-    std::vector<Point3f> pointMire = initPoint3D(7, 4, 3.5);
+    std::vector<Point3f> pointMire = initPoint3D(7, 4, 35.f);
 
-    Mat tmp;
+    Mat rotMatrix;
     bool flag;
     bool first = false;
     for(;;) {
@@ -436,11 +441,12 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
             drawChessboardCorners(view, s, Mat(pointImage), flag);
 
             solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec, first, CV_EPNP);
-            Rodrigues(rvec, tmp);
-            computeTransform(tmp, tvec);
+            Rodrigues(rvec, rotMatrix);
 
-            getEulerAngle(tmp, rot);
+            getEulerAngle(rotMatrix, euler);
             transform = tvec;
+
+            computeTransform(rotMatrix, tvec);
         }
         char key = (char)waitKey(50);
 
@@ -654,9 +660,10 @@ std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize)
     for(int i = 0; i < y; ++i) {
         for (int j = 0; j < x; ++j) {
             Point3f tmp;
+
             tmp.x = j*squareSize;
             tmp.y = i*squareSize;
-            tmp.z = 0;
+            tmp.z = 0.f;
 
             ret.push_back(tmp);
         }
@@ -665,28 +672,75 @@ std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize)
     return ret;
 }
 
-void CamCalibration::getTransformMat(cv::Mat rot, cv::Mat tvec, cv::Mat &res) {
-    res = Mat::ones(3, 4, CV_64F);
+void CamCalibration::computeTransform(cv::Mat rodri, cv::Mat translation) {
 
-    for(int i = 0; i < 3; ++i)
-        for(int j = 0; j < 3; ++j)
-            res.at<double>(j,i) = rot.at<double>(j,i);
+//    for(int i = 0; i < 3; ++i)
+//        for(int j = 0; j < 3; ++j)
+//            transformation.m[i][j] = rodri.at<double>(j,i);
+//
+//    for(int i = 0; i < 3; ++i)
+//        transformation.m[i][3] = translation.at<double>(i);
+    float x = translation.at<double>(0);
+    float y = translation.at<double>(1) + 35.f;
+    float z = translation.at<double>(2);
 
-    for(int i = 0; i < 3; ++i)
-        res.at<double>(3, i) = tvec.at<double>(i);
+    transformation = Translation(x, y, z) * RotationX(euler[0]) * RotationY(euler[1]) * RotationZ(euler[2]);
 
 }
 
-void CamCalibration::computeTransform(cv::Mat rodri, cv::Mat translation) {
+Transform CamCalibration::lookat(const Vec3f eye, const Vec3f center, const Vec3f up) {
 
-    for(int i = 0; i < 3; ++i)
-        for(int j = 0; j < 3; ++j)
-            transformation.m[i][j] = rodri.at<double>(j,i);
+    Transform Matrix;
+    Transform M1, M2;
 
-    for(int i = 0; i < 2; ++i)
-        transformation.m[i][3] = translation.at<double>(i);
+    Vec3f X, Y, Z;
 
-    transformation.m[2][3] = -translation.at<double>(2);
+    normalize(eye - center, Z);
+    normalize(up.cross(Z), X);
+    Y = Z.cross(X);
 
+    M1.m[0][0] = X[0];
+    M1.m[1][0] = X[1];
+    M1.m[2][0] = X[2];
+    M1.m[3][0] = 0;
+
+    M1.m[0][1] = Y[0];
+    M1.m[1][1] = Y[1];
+    M1.m[2][1] = Y[2];
+    M1.m[3][1] = 0;
+
+    M1.m[0][2] = Z[0];
+    M1.m[1][2] = Z[1];
+    M1.m[2][2] = Z[2];
+    M1.m[3][2] = 0;
+
+    M1.m[0][3] = 0;
+    M1.m[1][3] = 0;
+    M1.m[2][3] = 0;
+    M1.m[3][3] = 1;
+
+    M2.m[0][0] = 1;
+    M2.m[1][0] = 0;
+    M2.m[2][0] = 0;
+    M2.m[3][0] = eye[0];
+
+    M2.m[0][1] = 0;
+    M2.m[1][1] = 1;
+    M2.m[2][1] = 0;
+    M2.m[3][1] = eye[1];
+
+    M2.m[0][2] = 0;
+    M2.m[1][2] = 0;
+    M2.m[2][2] = 1;
+    M2.m[3][2] = eye[2];
+
+    M2.m[0][3] = 0;
+    M2.m[1][3] = 0;
+    M2.m[2][3] = 0;
+    M2.m[3][3] = 1;
+
+    Matrix = M1 * M2;
+
+    return Matrix;
 }
 

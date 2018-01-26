@@ -36,7 +36,5 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
         color(1,1,1);
     }
 
-
-
     transform = t;
 }

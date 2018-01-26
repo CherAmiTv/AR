@@ -22,7 +22,7 @@ protected:
     CamCalibration* m_calibration;
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    Framebuffer() : App(640, 480), m_mire(4, 7, 3.5, Identity()) {}
+    Framebuffer() : App(640, 480), m_mire(4, 7, 35.0, Identity()) {}
 
     void moveCam(){
         int mx, my;
@@ -54,10 +54,10 @@ public:
         double y = 10.0f;
         camInit();
 
-        Point min(0,0, -1);
-        Point max(7*3.5,4*3.5, -1);
+//        Point min(0,0, -1);
+//        Point max(7*3.5,4*3.5);
 //        m_mire.bounds(min, max);
-        m_camera.lookat(min, max);
+//        m_camera.lookat(Point(), -10.f);
         glClearColor(0.2, 0.2, 0.2, 1.f);
         glDepthFunc(GL_LESS);
         glEnable(GL_DEPTH_TEST);
@@ -86,16 +86,16 @@ public:
 //                std::cout << t.at<double>(i) << " ";
 //            std::cout << std::endl;
 
-            Vector transform = Vector(t.at<double>(0), -t.at<double>(1), -t.at<double>(2));
+//            Vector transform = Vector(t.at<double>(2), -t.at<double>(0), -t.at<double>(1));
+//            Transform t2 = Translation(transform) * RotationX(-rot[2]) * RotationY(-rot[0]) * RotationZ(-rot[1]);
+//            m_mire.setTransform(t2);
 
-            Transform t2 = Translation(transform) * RotationX(rot[0]) * RotationY(-rot[1]) * RotationZ(-rot[2]);
+//            Transform t3 = m_calibration->getTransform();
+//            std::cout << transform << std::endl;
+//            std::cout << rot[0] << " " << rot[1] << " " << rot[2] << std::endl;
+//            std::cout << t2 << std::endl;
 
-            m_mire.setTransform(t2);
-
-            Transform t3 = m_calibration->getTransform();
-            std::cout << transform << std::endl;
-            std::cout << rot[0] << " " << rot[1] << " " << rot[2] << std::endl;
-            std::cout << t2 << std::endl;
+//            std::cout << m_calibration->getTransform() << std::endl << m_calibration->getView() << std::endl << m_camera.view() << std::endl;
 
         }
 
@@ -107,8 +107,7 @@ public:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 //        draw(m_mire, m_mire.getTransform(), m_camera);
-        //Probleme look at repere gl/cv
-        draw(m_mire, m_calibration->getTransform(), m_camera.view(), m_calibration->getProjection());
+        draw(m_mire, m_calibration->getTransform(), m_calibration->getView(), m_calibration->getProjection());
 
         return 1;
     }
