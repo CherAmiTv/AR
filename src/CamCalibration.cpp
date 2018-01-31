@@ -91,7 +91,7 @@ public:
             inputType = INVALID;
         else
         {
-            cameraID = streamCamera;
+            cameraID = STREAMCAMERA;
             inputCapture.open(cameraID);
         }
         if (inputType == INVALID)
@@ -284,18 +284,20 @@ void CamCalibration::start(std::string filePath) {
 
     computeFrustum();
 
-    cam = VideoCapture(streamCamera);
+    cam = VideoCapture(STREAMCAMERA);
 
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
-    std::vector<Point3f> pointMire = initPoint3D(7, 4, 35.f);
+    std::vector<Point3f> pointMire = initPoint3D(7, 4, SQUARESIZE);
     Mat imageMod;
     Mat rotMatrix;
     bool first = false;
+    Mat imageTmp;
     for(;;) {
 
-        cam >> image;
-        image.copyTo(imageMod);
+        cam >> imageTmp;
+        flip(imageTmp, image, 0);
+        imageTmp.copyTo(imageMod);
         flag = findChessboardCorners(imageMod, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
 
         if (flag) {
@@ -487,4 +489,3 @@ bool CamCalibration::findMagicWand(Mat& view) {
         cv::rectangle(view, cv::Point(center.x-5, center.y-5), cv::Point(center.x+5, center.y+5), cv::Scalar(0,255,0), 1, 8, 0);
     }
 }
-

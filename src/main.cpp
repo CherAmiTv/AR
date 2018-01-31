@@ -8,7 +8,6 @@
 #include <Shader.h>
 #include "app.h"
 
-
 static void* cam(void* arg){
     CamCalibration* c = (CamCalibration*) arg;
     c->start();
@@ -24,9 +23,12 @@ protected:
     CamCalibration* m_calibration;
     GLuint tex = -1;
     Shader s;
+    std::vector<Point> m_fausseMire;
+    int sizeX = 7;
+    int sizeY = 4;
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    Framebuffer() : App(640, 480), m_mire(4, 7, 35.0, Identity()), backGround(GL_TRIANGLE_STRIP) {}
+    Framebuffer() : App(640, 480), m_mire(4, 7, SQUARESIZE, Identity()), backGround(GL_TRIANGLE_STRIP) {}
 
     void moveCam(){
         int mx, my;
@@ -54,14 +56,15 @@ public:
 
     int init() {
 
-        double x = 10.0f;
-        double y = 10.0f;
         camInit();
         s = Shader("data/mesh_color.glsl", 3);
-//        Point min(0,0, -1);
-//        Point max(7*3.5,4*3.5);
-//        m_mire.bounds(min, max);
-//        m_camera.lookat(Point(), -10.f);
+
+        m_fausseMire.resize((sizeX + 2) * (sizeY + 2));
+
+        for(int i = 0; i < sizeY+2; ++i)
+            for(int j = 0; j < sizeX+2; ++j)
+                m_fausseMire[j + i * (sizeX+2)] = Point((j - 1) * SQUARESIZE, (i - 1) * SQUARESIZE, 0);
+
         glClearColor(0.2, 0.2, 0.2, 1.f);
         glDepthFunc(GL_ALWAYS);
         glEnable(GL_DEPTH_TEST);
@@ -138,11 +141,7 @@ public:
     }
 
 
-    // dessiner une nouvelle image
-    int render() {
-        moveCam();
-
-        cv::Mat t = m_calibration->gettVec();
+    void genTexture(){
         cv::Mat img = m_calibration->getMat();
 
         glGenTextures(1, &tex);                  // Create The Texture
@@ -154,6 +153,42 @@ public:
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width(), window_height(), 0, GL_BGR, GL_UNSIGNED_BYTE, img.data);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    void doThings(){
+
+        const Transform VpPVM = Viewport(window_width(), window_height()) * m_calibration->getProjection() * m_calibration->getView() * m_calibration->getTransform();
+        const Point magicWand = m_calibration->getMagicWand();
+
+        int cpt = 0;
+        for(Point p : m_fausseMire){
+//        Point p = m_fausseMire[4];
+            Point pTransform = VpPVM(p);
+
+            cv::Mat img = m_calibration->getMat();
+            cv::rectangle(img, cv::Point(pTransform.x-5, pTransform.y-5), cv::Point(pTransform.x+5, pTransform.y+5), cv::Scalar(0,255,0), 1, 8, 0);
+
+            if(distance(pTransform, magicWand) <= 15.f){
+//
+                int y = cpt / (sizeX + 2);
+                int x = cpt - (y * (sizeX+2));
+//
+                std::cout << cpt << " " << x << " " << y << std::endl;//pTransform.x - magicWand.x << " " << pTransform.y - magicWand.y << std::endl;
+            }
+        cpt++;
+        }
+
+    }
+
+    // dessiner une nouvelle image
+    int render() {
+        moveCam();
+
+        cv::Mat t = m_calibration->gettVec();
+
         bool flag = m_calibration->getFlag();
         if(flag){
             flag = true;
@@ -167,15 +202,8 @@ public:
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-//        draw(m_mire, m_mire.getTransform(), m_camera);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glViewport(0, 0, window_width(), window_height());
-        glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        genTexture();
+        doThings();
 
         s.draw(m_calibration->getView(), m_calibration->getProjection(), tex);
         if(flag)
