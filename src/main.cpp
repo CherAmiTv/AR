@@ -176,7 +176,9 @@ public:
                 int y = cpt / (sizeX + 2);
                 int x = cpt - (y * (sizeX+2));
 //
-                std::cout << cpt << " " << x << " " << y << std::endl;//pTransform.x - magicWand.x << " " << pTransform.y - magicWand.y << std::endl;
+//                std::cout << cpt << " " << x << " " << y << std::endl;//pTransform.x - magicWand.x << " " << pTransform.y - magicWand.y << std::endl;
+                m_mire.setHeight(x, y, -0.5f);
+                m_fausseMire[x + y * (sizeX+2)].z -= 0.5f;
             }
         cpt++;
         }
