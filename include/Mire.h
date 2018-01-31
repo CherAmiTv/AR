@@ -17,8 +17,12 @@ public:
     Mire(int row, int col, float squareSize, Transform t);
     Transform& getTransform(){return transform;}
     void setTransform(const Transform& t){transform = t;}
+    void setHeight(int x, int y, float z);
 private:
     Transform transform;
+    int m_row;
+    int m_col;
+    float m_squareSize;
 };
 
 class Object : public Mesh{

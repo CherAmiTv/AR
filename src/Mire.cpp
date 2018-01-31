@@ -9,11 +9,14 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
     // squares black and white
     bool colorBlack = true;
 
-    float height = row*squareSize;
-    float width = col*squareSize;
+    int m_row = row;
+    int m_col = col;
+    float m_squareSize = squareSize;
+    float height = row;//*squareSize;
+    float width = col;//*squareSize;
 
     float z = 0.0;
-    
+
     int count = 0;
 
     for(float h = -squareSize;h < height;h += squareSize) {
@@ -34,13 +37,13 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
             }
 
             // triangle 1 (left bottom)
-            Point b(w, h, z);
             Point a(w + squareSize, h, z);
+            Point b(w, h, z);
             Point c(w, h + squareSize, z);
 
             // triangle 2 (right up)
-            Point e = c;
             Point d = a;
+            Point e = c;
             Point f(w + squareSize, h + squareSize, z);
 
             // create mesh vertices
@@ -55,39 +58,80 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
         }
     }
     transform = t;
-    /*
-    std::vector<vec3> tmp;
-    std::vector<int> indices;
+}
 
-    for(int i = 0; i < row; ++i)
-        for(int j = 0; j < col; ++j)
-            tmp.push_back(vec3(j * squareSize, i * squareSize, 0.0));
+void Mire::setHeight(int x, int y, float z) {
+    // (-1,-1), origine en haut a gauche
+    if(x == -1) {
+        if(y == -1){
+            // coin en haut a gauche
+            int id = 1;
+            vec3 p = m_positions[id];
+            vertex(id, p.x, p.y, z);
 
-    for(int i = 0; i < (col-1); i++){
-        int cptY = 0 ;
-        int cptZ = 0;
-        for(int j = 0; j < (row-1); j++){
-            int cptX = 0;
-            cptZ++;
-            for(int k = 0; k < 2; k++){
-                indices.push_back(j * col + cptX + i);
-                indices.push_back(col * cptZ + i);
-                indices.push_back(col * cptY + i + 1);
+        }else if(y == m_row-1) {
+            // coin en bas a gauche
+            int id1 = (6*m_col * (m_row-1)) + 2;
+            int id2 = (6*m_col * (m_row-1)) + 4;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, z);
 
-                cptX++;
-                if(k == 0)
-                    cptY++;
-            }
+        }else {
+            // bordure gauche
+            int id1 = (6*m_col * y) + 2; // idem coin bas gauche
+            int id2 = (6*m_col * y) + 4; // idem coin bas gauche
+            int id3 = (6*m_col * (y+1)) + 1;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vec3 p3 = m_positions[id3];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, z);
+            vertex(id3, p3.x, p3.y, z);
+
+        }
+    }else if(x == m_col-1) {
+        if(y == -1){
+            // coin en haut a droite
+            int id1 = 6*(m_col-1);
+            int id2 = 6*(m_col-1) + 3;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, z);
+
+        }else if(y == m_row-1) {
+            // coin en bas a droite
+            int id = (6*m_col * m_row) + 1;
+            vec3 p = m_positions[id];
+            vertex(id, p.x, p.y, z);
+
+        }else {
+            // bordure droite
+            int id1 = (6*m_col * (y+1)) - 1;
+            int id2 = (6*m_col * (y+1)) + (6*(m_col-1));
+            int id3 = (6*m_col * (y+1)) + (6*(m_col-1)) + 3;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vec3 p3 = m_positions[id3];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, p2.z);
+            vertex(id3, p3.x, p3.y, p3.z);
+            
+        }
+    }else {
+        if(y == -m_squareSize){
+            // bordure en haut
+
+        }else if(y == m_squareSize * (m_row-1)) {
+            // bordure en bas
+
+        }else {
+            // milieu
+
         }
     }
-
-    for(int i = 0; i < indices.size(); i++) {
-        color(1,1,1);
-        vertex(tmp[indices[i]]);
-    }
-
-    transform = t;
-     */
 }
 
 Object::Object(Transform t, std::string filename, vec3 objectColor) {
