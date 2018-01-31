@@ -476,6 +476,10 @@ bool CamCalibration::findMagicWand(Mat& view) {
     cv::Scalar low_color_hsv = cv::Scalar(20, 100, 100);
     cv::Scalar high_color_hsv = cv::Scalar(30, 255, 255);
 
+    // blue color
+    //cv::Scalar low_color_hsv = cv::Scalar(110,50,50);
+    //cv::Scalar high_color_hsv = cv::Scalar(130,255,255);
+
     inRange(hsv_foreground, low_color_hsv, high_color_hsv, mask_color);
 
     /*
@@ -488,8 +492,10 @@ bool CamCalibration::findMagicWand(Mat& view) {
     imshow("mask", mask_color);
 
     // increase the quality with erode (decrease the noise) and dilate (fill the holes)
-    erode(mask_color, mask_color, cv::Mat::ones(3, 3,CV_32F), cv::Point(-1,-1), 1, 1, 1);
-    dilate(mask_color, mask_color, cv::Mat::ones(9,9,CV_32F), cv::Point(-1,-1), 2, 1, 1);
+    erode(mask_color, mask_color, cv::Mat::ones(5, 5,CV_32F), cv::Point(-1,-1), 1, 1, 1);
+    dilate(mask_color, mask_color, cv::Mat::ones(11,11,CV_32F), cv::Point(-1,-1), 2, 1, 1);
+
+    imshow("mask2", mask_color);
 
     // contours detection
     cv::findContours(mask_color, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
@@ -498,6 +504,7 @@ bool CamCalibration::findMagicWand(Mat& view) {
     if(contours.size() > 0) {
         cv::Moments mu = moments(contours[0]);
         cv::Point center(mu.m10/mu.m00 , mu.m01/mu.m00);
+        magicWand = center;
         cv::rectangle(view, cv::Point(center.x-5, center.y-5), cv::Point(center.x+5, center.y+5), cv::Scalar(0,255,0), 1, 8, 0);
     }
 }

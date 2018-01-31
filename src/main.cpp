@@ -5,6 +5,7 @@
 #include <Mire.h>
 #include <draw.h>
 #include <pthread.h>
+#include <wavefront.h>
 #include "app.h"
 
 
@@ -16,13 +17,16 @@ static void* cam(void* arg){
 class Framebuffer : public App {
 protected:
     Orbiter m_camera;
-    Mire m_mire;
+    Mire m_mire, m_mire2;
+    Mesh m_pointer;
     pthread_t m_threads;
     float camSpeed = 10;
     CamCalibration* m_calibration;
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    Framebuffer() : App(640, 480), m_mire(4, 7, 35.0, Identity()) {}
+    Framebuffer() : App(640, 480), m_mire(4, 7, 35.0, Identity()), m_mire2(2,2,10.0, Identity()) {
+        m_pointer = read_mesh("Test/cube.obj");
+    }
 
     void moveCam(){
         int mx, my;
@@ -107,7 +111,22 @@ public:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 //        draw(m_mire, m_mire.getTransform(), m_camera);
-        draw(m_mire, m_calibration->getTransform(), m_calibration->getView(), m_calibration->getProjection());
+        std::cout << "Mire transform" << std::endl;
+        std::cout << m_calibration->getTransform() << std::endl;
+        //draw(m_mire, m_calibration->getTransform(), m_calibration->getView(), m_calibration->getProjection());
+
+        std::cout << "Pointer transform" << std::endl;
+        std::cout << m_calibration->getMagicWand() << std::endl;
+        Transform viewportInv = Viewport(window_width(), window_height()).inverse();
+        Transform projectionInv = m_calibration->getProjection().inverse();
+        Transform viewInv = m_calibration->getView().inverse();
+        Point p = viewportInv(m_calibration->getMagicWand());
+        p = projectionInv(p);
+        p = viewInv(p);
+
+        std::cout << "Pointer transform model" << std::endl;
+        std::cout << p << std::endl;
+        draw(m_mire2, Translation(p.x, -p.y, 0.0), m_calibration->getView(), m_calibration->getProjection());
 
         return 1;
     }

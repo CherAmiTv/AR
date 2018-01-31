@@ -27,6 +27,7 @@ public:
     Transform getProjection()const{ return frustum;}
     Transform getTransform()const{return transformation;};
     Transform getView()const{return view;};
+    Point getMagicWand()const{return Point(magicWand.x, magicWand.y, 0.0);};
 
 private :
     Transform view;
@@ -40,6 +41,8 @@ private :
 
     cv::Vec3d euler;
     cv::Mat transform;
+
+    cv::Point magicWand;
 
     Transform lookat(const cv::Vec3f eye, const cv::Vec3f center, const cv::Vec3f up);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);
