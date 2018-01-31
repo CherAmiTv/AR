@@ -284,14 +284,13 @@ void CamCalibration::start(std::string filePath) {
 
     computeFrustum();
 
-    cam = VideoCapture(0);
+    cam = VideoCapture(streamCamera);
 
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
     std::vector<Point3f> pointMire = initPoint3D(7, 4, 35.f);
     Mat imageMod;
     Mat rotMatrix;
-    bool flag;
     bool first = false;
     for(;;) {
 

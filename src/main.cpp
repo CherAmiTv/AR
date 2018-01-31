@@ -63,7 +63,7 @@ public:
 //        m_mire.bounds(min, max);
 //        m_camera.lookat(Point(), -10.f);
         glClearColor(0.2, 0.2, 0.2, 1.f);
-        glDepthFunc(GL_LESS);
+        glDepthFunc(GL_ALWAYS);
         glEnable(GL_DEPTH_TEST);
         glFrontFace(GL_CCW);
         return 0;   // ras, pas d'erreur
@@ -154,26 +154,10 @@ public:
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width(), window_height(), 0, GL_BGR, GL_UNSIGNED_BYTE, img.data);
-        if(!t.empty()){
-
+        bool flag = m_calibration->getFlag();
+        if(flag){
+            flag = true;
             cv::Vec3d rot = m_calibration->getRot();
-
-
-//            for(int i =0 ; i < 2; ++i)
-//                std::cout << t.at<double>(i) << " ";
-//            std::cout << std::endl;
-
-//            Vector transform = Vector(t.at<double>(2), -t.at<double>(0), -t.at<double>(1));
-//            Transform t2 = Translation(transform) * RotationX(-rot[2]) * RotationY(-rot[0]) * RotationZ(-rot[1]);
-//            m_mire.setTransform(t2);
-
-//            Transform t3 = m_calibration->getTransform();
-//            std::cout << transform << std::endl;
-//            std::cout << rot[0] << " " << rot[1] << " " << rot[2] << std::endl;
-//            std::cout << t2 << std::endl;
-
-//            std::cout << m_calibration->getTransform() << std::endl << m_calibration->getView() << std::endl << m_camera.view() << std::endl;
-
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -194,8 +178,8 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         s.draw(m_calibration->getView(), m_calibration->getProjection(), tex);
-        glDepthFunc(GL_ALWAYS);
-        draw(m_mire, m_calibration->getTransform(), m_calibration->getView(), m_calibration->getProjection());
+        if(flag)
+            draw(m_mire, m_calibration->getTransform(), m_calibration->getView(), m_calibration->getProjection());
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);

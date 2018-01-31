@@ -17,7 +17,7 @@
 #include <mat.h>
 #include <glcore.h>
 
-static const int streamCamera = 1; // 0 : default camera, 1 or 2 : other camera
+static const int streamCamera = 0; // 0 : default camera, 1 or 2 : other camera
 
 class CamCalibration {
 public:
@@ -31,7 +31,7 @@ public:
     Point getMagicWand()const{return Point(magicWand.x, magicWand.y, 0.0);};
 
     cv::Mat& getMat() {return image;}
-
+    bool getFlag()const {return flag;}
 private :
     Transform view;
     cv::Mat invCameraMatrix;
@@ -45,7 +45,7 @@ private :
     cv::Mat transform;
     cv::VideoCapture cam;
     cv::Mat image;
-
+    bool flag;
 
     cv::Point magicWand;
 
