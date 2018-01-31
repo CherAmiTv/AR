@@ -12,6 +12,13 @@
 using namespace cv;
 using namespace std;
 
+static void help()
+{
+    cout <<  "This is a camera calibration sample." << endl
+         <<  "Usage: calibration configurationFile"  << endl
+         <<  "Near the sample file you'll find the configuration file, which has detailed help of "
+                 "how to edit it.  It may be any OpenCV supported file format XML/YAML." << endl;
+}
 class Settings
 {
 public:
@@ -62,6 +69,8 @@ public:
     }
     void interprate()
     {
+
+
         goodInput = true;
         if (boardSize.width <= 0 || boardSize.height <= 0)
         {
@@ -70,7 +79,9 @@ public:
         }
         if (squareSize <= 10e-6)
         {
+//            squareSize
             cerr << "Invalid square size " << squareSize << endl;
+//            goodInput = false;
         }
         if (nrFrames <= 0)
         {
@@ -210,94 +221,15 @@ static void read(const FileNode& node, Settings& x, const Settings& default_valu
 
 enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs,
-                           vector<vector<Point2f> > imagePoints );
-
-
-void CamCalibration::calibrate() {
-
-    Settings s;
-    const string inputSettingsFile = "conf/in_VID5.xml";
-    FileStorage fs(inputSettingsFile, FileStorage::READ); // Read the settings
-    if (!fs.isOpened())
-    {
-        cout << "Could not open the configuration file: \"" << inputSettingsFile << "\"" << endl;
-    }
-    fs["Settings"] >> s;
-    fs.release();                                         // close Settings file
-
-    if (!s.goodInput)
-    {
-        cout << "Invalid input detected. Application stopping. " << endl;
-    }
-
-    vector<vector<Point2f> > imagePoints;
-
-    Size imageSize;
-    clock_t prevTimestamp = 0;
-    const Scalar RED(0,0,255), GREEN(0,255,0);
-    const char ESC_KEY = 27;
-
-    std::vector<cv::Mat> rvecs;
-    std::vector<cv::Mat> tvecs;
-
-    while(true)
-    {
-        Mat view;
-        bool blinkOutput = false;
-        view = s.nextImage();
-
-        //-----  If got enough image, then stop calibration-------------
-        if(imagePoints.size() >= (unsigned)s.nrFrames) {
-            runCalibrationAndSave(s, imageSize, cameraMatrix, distCoeffs, rvecs, tvecs, imagePoints);
-            break;
-        }
-
-        imageSize = view.size();  // Format input image.
-        if( s.flipVertical )    flip( view, view, 0 );
-
-        vector<Point2f> pointBuf;
-        bool found = findChessboardCorners( view, s.boardSize, pointBuf, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-
-        if (found)
-        {
-            // improve the found corners' coordinate accuracy for chessboard
-            Mat viewGray;
-            cvtColor(view, viewGray, COLOR_BGR2GRAY);
-            cornerSubPix(viewGray, pointBuf, Size(11,11), Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-
-            if(!s.inputCapture.isOpened() || clock() - prevTimestamp > s.delay*1e-3*CLOCKS_PER_SEC)
-            {
-                imagePoints.push_back(pointBuf);
-                prevTimestamp = clock();
-                blinkOutput = s.inputCapture.isOpened();
-            }
-
-            // Draw the corners.
-            drawChessboardCorners( view, s.boardSize, Mat(pointBuf), found );
-        }
-
-        if( blinkOutput )
-            bitwise_not(view, view);
-
-        //------------------------------ Show image and check for input commands -------------------
-        imshow("Image View", view);
-        char key = (char)waitKey(s.inputCapture.isOpened() ? 50 : s.delay);
-
-        if( key  == ESC_KEY )
-            break;
-
-        if( s.inputCapture.isOpened() && key == 'g' )
-            imagePoints.clear();
-    }
-}
-
-void CamCalibration::load(std::string filePath) {
+bool CamCalibration::load(std::string filePath) {
     FileStorage fs(filePath, FileStorage::READ); // Read the settings
+
+    if(!fs.isOpened())
+        return false;
     fs["Distortion_Coefficients"] >> distCoeffs;
     fs["Camera_Matrix"]  >> cameraMatrix;
+    return true;
 }
-
 
 void CamCalibration::computeFrustum() {
     invCameraMatrix = Mat::ones(3, 3, CV_64F);
@@ -316,7 +248,7 @@ void CamCalibration::computeFrustum() {
     d = Mat::ones(3, 1, CV_64F);
 
     xmin.at<double>(0) = 0;
-    xmin.at<double>(1) = -(window_height() / 2);
+    xmin.at<double>(1) = (window_height() / 2);
 
     xmax.at<double>(0) = window_width();
     xmax.at<double>(1) = (window_height() / 2);
@@ -359,14 +291,18 @@ void CamCalibration::computeFrustum() {
 
     frustum.m[3][2] = -1;
 
+    Vec3f eye = {0.f, 0.f, 0.f};
+    Vec3f center = {0.f, 0.f, 10.f};
+    Vec3f up = {0.f, -1.f, 0.f};
+
+    view = lookat(eye, center, up);
+    view = Transpose(view);
 }
 
-void CamCalibration::start(std::string filePath, bool needCalibration) {
+void CamCalibration::start(std::string filePath) {
 
-    if(!needCalibration)
-        load();
-    else
-        calibrate();
+    if(!load(filePath))
+        cout << "run ./calibrage first !" << endl;
 
     computeFrustum();
 
@@ -374,9 +310,9 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
     Mat view;
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
-    std::vector<Point3f> pointMire = initPoint3D(7, 4, 3.5);
+    std::vector<Point3f> pointMire = initPoint3D(7, 4, 35.f);
 
-    Mat tmp;
+    Mat rotMatrix;
     bool flag;
     bool first = false;
     for(;;) {
@@ -387,11 +323,12 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
             drawChessboardCorners(view, s, Mat(pointImage), flag);
 
             solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec, first, CV_EPNP);
-            Rodrigues(rvec, tmp);
-            computeTransform(tmp, tvec);
+            Rodrigues(rvec, rotMatrix);
 
-            getEulerAngle(tmp, rot);
+            getEulerAngle(rotMatrix, euler);
             transform = tvec;
+
+            computeTransform(rotMatrix, tvec);
         }
 
         // magic wand detection
@@ -426,167 +363,6 @@ void CamCalibration::getEulerAngle(Mat &rotCamerMatrix,Vec3d &eulerAngles){
                                eulerAngles);
 }
 
-static double computeReprojectionErrors( const vector<vector<Point3f> >& objectPoints,
-                                         const vector<vector<Point2f> >& imagePoints,
-                                         const vector<Mat>& rvecs, const vector<Mat>& tvecs,
-                                         const Mat& cameraMatrix , const Mat& distCoeffs,
-                                         vector<float>& perViewErrors)
-{
-    vector<Point2f> imagePoints2;
-    int i, totalPoints = 0;
-    double totalErr = 0, err;
-    perViewErrors.resize(objectPoints.size());
-
-    for( i = 0; i < (int)objectPoints.size(); ++i )
-    {
-        projectPoints( Mat(objectPoints[i]), rvecs[i], tvecs[i], cameraMatrix,
-                       distCoeffs, imagePoints2);
-        err = norm(Mat(imagePoints[i]), Mat(imagePoints2), CV_L2);
-
-        int n = (int)objectPoints[i].size();
-        perViewErrors[i] = (float) std::sqrt(err*err/n);
-        totalErr        += err*err;
-        totalPoints     += n;
-    }
-
-    return std::sqrt(totalErr/totalPoints);
-}
-
-static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Point3f>& corners)
-{
-    corners.clear();
-
-    for( int i = 0; i < boardSize.height; ++i )
-        for( int j = 0; j < boardSize.width; ++j )
-            corners.push_back(Point3f(float( j*squareSize ), float( i*squareSize ), 0));
-}
-
-static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat& distCoeffs,
-                            vector<vector<Point2f> > imagePoints, vector<Mat>& rvecs, vector<Mat>& tvecs,
-                            vector<float>& reprojErrs,  double& totalAvgErr)
-{
-
-    cameraMatrix = Mat::eye(3, 3, CV_64F);
-    if( s.flag & CV_CALIB_FIX_ASPECT_RATIO )
-        cameraMatrix.at<double>(0,0) = 1.0;
-
-    distCoeffs = Mat::zeros(8, 1, CV_64F);
-
-    vector<vector<Point3f> > objectPoints(1);
-    calcBoardCornerPositions(s.boardSize, s.squareSize, objectPoints[0]);
-
-    objectPoints.resize(imagePoints.size(),objectPoints[0]);
-
-    //Find intrinsic and extrinsic camera parameters
-    double rms = calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
-                                 distCoeffs, rvecs, tvecs, s.flag|CV_CALIB_FIX_K4|CV_CALIB_FIX_K5);
-
-    cout << "Re-projection error reported by calibrateCamera: "<< rms << endl;
-
-    bool ok = checkRange(cameraMatrix) && checkRange(distCoeffs);
-
-    totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints,
-                                            rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs);
-
-    return ok;
-}
-
-// Print camera parameters to the output file
-static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat& distCoeffs,
-                              const vector<Mat>& rvecs, const vector<Mat>& tvecs,
-                              const vector<float>& reprojErrs, const vector<vector<Point2f> >& imagePoints,
-                              double totalAvgErr )
-{
-    FileStorage fs( s.outputFileName, FileStorage::WRITE );
-
-    time_t tm;
-    time( &tm );
-    struct tm *t2 = localtime( &tm );
-    char buf[1024];
-    strftime( buf, sizeof(buf)-1, "%c", t2 );
-
-    fs << "calibration_Time" << buf;
-
-    if( !rvecs.empty() || !reprojErrs.empty() )
-        fs << "nrOfFrames" << (int)std::max(rvecs.size(), reprojErrs.size());
-    fs << "image_Width" << imageSize.width;
-    fs << "image_Height" << imageSize.height;
-    fs << "board_Width" << s.boardSize.width;
-    fs << "board_Height" << s.boardSize.height;
-    fs << "square_Size" << s.squareSize;
-
-    if( s.flag & CV_CALIB_FIX_ASPECT_RATIO )
-        fs << "FixAspectRatio" << s.aspectRatio;
-
-    if( s.flag )
-    {
-        sprintf( buf, "flags: %s%s%s%s",
-                 s.flag & CV_CALIB_USE_INTRINSIC_GUESS ? " +use_intrinsic_guess" : "",
-                 s.flag & CV_CALIB_FIX_ASPECT_RATIO ? " +fix_aspectRatio" : "",
-                 s.flag & CV_CALIB_FIX_PRINCIPAL_POINT ? " +fix_principal_point" : "",
-                 s.flag & CV_CALIB_ZERO_TANGENT_DIST ? " +zero_tangent_dist" : "" );
-        cvWriteComment( *fs, buf, 0 );
-
-    }
-
-    fs << "flagValue" << s.flag;
-
-    fs << "Camera_Matrix" << cameraMatrix;
-    fs << "Distortion_Coefficients" << distCoeffs;
-
-    fs << "Avg_Reprojection_Error" << totalAvgErr;
-    if( !reprojErrs.empty() )
-        fs << "Per_View_Reprojection_Errors" << Mat(reprojErrs);
-
-    if( !rvecs.empty() && !tvecs.empty() )
-    {
-        CV_Assert(rvecs[0].type() == tvecs[0].type());
-        Mat bigmat((int)rvecs.size(), 6, rvecs[0].type());
-        for( int i = 0; i < (int)rvecs.size(); i++ )
-        {
-            Mat r = bigmat(Range(i, i+1), Range(0,3));
-            Mat t = bigmat(Range(i, i+1), Range(3,6));
-
-            CV_Assert(rvecs[i].rows == 3 && rvecs[i].cols == 1);
-            CV_Assert(tvecs[i].rows == 3 && tvecs[i].cols == 1);
-            //*.t() is MatExpr (not Mat) so we can use assignment operator
-            r = rvecs[i].t();
-            t = tvecs[i].t();
-        }
-        cvWriteComment( *fs, "a set of 6-tuples (rotation vector + translation vector) for each view", 0 );
-        fs << "Extrinsic_Parameters" << bigmat;
-    }
-
-    if( !imagePoints.empty() )
-    {
-        Mat imagePtMat((int)imagePoints.size(), (int)imagePoints[0].size(), CV_32FC2);
-        for( int i = 0; i < (int)imagePoints.size(); i++ )
-        {
-            Mat r = imagePtMat.row(i).reshape(2, imagePtMat.cols);
-            Mat imgpti(imagePoints[i]);
-            imgpti.copyTo(r);
-        }
-        fs << "Image_points" << imagePtMat;
-    }
-}
-
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat& cameraMatrix, Mat& distCoeffs, vector<Mat> rvecs, vector<Mat> tvecs, vector<vector<Point2f> > imagePoints )
-{
-    vector<float> reprojErrs;
-    double totalAvgErr = 0;
-
-    bool ok = runCalibration(s,imageSize, cameraMatrix, distCoeffs, imagePoints, rvecs, tvecs,
-                             reprojErrs, totalAvgErr);
-
-    cout << (ok ? "Calibration succeeded" : "Calibration failed")
-         << ". avg re projection error = "  << totalAvgErr ;
-
-    if( ok )
-        saveCameraParams( s, imageSize, cameraMatrix, distCoeffs, rvecs ,tvecs, reprojErrs,
-                          imagePoints, totalAvgErr);
-    return ok;
-}
-
 std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize) {
 
     std::vector<cv::Point3f> ret;
@@ -594,9 +370,10 @@ std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize)
     for(int i = 0; i < y; ++i) {
         for (int j = 0; j < x; ++j) {
             Point3f tmp;
+
             tmp.x = j*squareSize;
             tmp.y = i*squareSize;
-            tmp.z = 0;
+            tmp.z = 0.f;
 
             ret.push_back(tmp);
         }
@@ -607,15 +384,74 @@ std::vector<Point3f> CamCalibration::initPoint3D(int x, int y, float squareSize)
 
 void CamCalibration::computeTransform(cv::Mat rodri, cv::Mat translation) {
 
-    for(int i = 0; i < 3; ++i)
-        for(int j = 0; j < 3; ++j)
-            transformation.m[i][j] = rodri.at<double>(j,i);
+//    for(int i = 0; i < 3; ++i)
+//        for(int j = 0; j < 3; ++j)
+//            transformation.m[i][j] = rodri.at<double>(j ,i);
+//
+//    for(int i = 0; i < 3; ++i)
+//        transformation.m[i][3] = translation.at<double>(i);
+    float x = translation.at<double>(0);
+    float y = translation.at<double>(1) + 35.f;
+    float z = translation.at<double>(2);
 
-    for(int i = 0; i < 2; ++i)
-        transformation.m[i][3] = translation.at<double>(i);
+    transformation = Translation(x, y, z) * RotationX(euler[0]) * RotationY(euler[1]) * RotationZ(euler[2]);
 
-    transformation.m[2][3] = -translation.at<double>(2);
+}
 
+Transform CamCalibration::lookat(const Vec3f eye, const Vec3f center, const Vec3f up) {
+
+    Transform Matrix;
+    Transform M1, M2;
+
+    Vec3f X, Y, Z;
+
+    normalize(eye - center, Z);
+    normalize(up.cross(Z), X);
+    Y = Z.cross(X);
+
+    M1.m[0][0] = X[0];
+    M1.m[1][0] = X[1];
+    M1.m[2][0] = X[2];
+    M1.m[3][0] = 0;
+
+    M1.m[0][1] = Y[0];
+    M1.m[1][1] = Y[1];
+    M1.m[2][1] = Y[2];
+    M1.m[3][1] = 0;
+
+    M1.m[0][2] = Z[0];
+    M1.m[1][2] = Z[1];
+    M1.m[2][2] = Z[2];
+    M1.m[3][2] = 0;
+
+    M1.m[0][3] = 0;
+    M1.m[1][3] = 0;
+    M1.m[2][3] = 0;
+    M1.m[3][3] = 1;
+
+    M2.m[0][0] = 1;
+    M2.m[1][0] = 0;
+    M2.m[2][0] = 0;
+    M2.m[3][0] = eye[0];
+
+    M2.m[0][1] = 0;
+    M2.m[1][1] = 1;
+    M2.m[2][1] = 0;
+    M2.m[3][1] = eye[1];
+
+    M2.m[0][2] = 0;
+    M2.m[1][2] = 0;
+    M2.m[2][2] = 1;
+    M2.m[3][2] = eye[2];
+
+    M2.m[0][3] = 0;
+    M2.m[1][3] = 0;
+    M2.m[2][3] = 0;
+    M2.m[3][3] = 1;
+
+    Matrix = M1 * M2;
+
+    return Matrix;
 }
 
 bool CamCalibration::findMagicWand(Mat& view) {

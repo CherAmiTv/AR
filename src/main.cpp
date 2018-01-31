@@ -6,33 +6,23 @@
 #include <draw.h>
 #include <pthread.h>
 #include "app.h"
-#include <fstream>
+
 
 static void* cam(void* arg){
     CamCalibration* c = (CamCalibration*) arg;
-    // Verifie si le fichier de calibration existe
-    // Sinon en genere un nouveau
-    std::ifstream calibrationFile(calibrationFileName);
-    if(calibrationFile.good()) {
-        calibrationFile.close();
-        c->start();
-    }else {
-        c->start(calibrationFileName, true);
-    }
+    c->start();
 }
 
 class Framebuffer : public App {
 protected:
     Orbiter m_camera;
-    //Mire m_mire;
-    Object m_object;
+    Mire m_mire;
     pthread_t m_threads;
     float camSpeed = 10;
     CamCalibration* m_calibration;
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    //Framebuffer() : App(640, 480), m_mire(4, 7, 3.5, Identity()) {}
-    Framebuffer() : App(640, 480), m_object(Identity()) {}
+    Framebuffer() : App(640, 480), m_mire(4, 7, 35.0, Identity()) {}
 
     void moveCam(){
         int mx, my;
@@ -55,6 +45,7 @@ public:
         m_calibration = new CamCalibration();
         pthread_create(&m_threads, NULL, cam, (void*)m_calibration);
 
+//        m_threads.push_back(std::thread(&Framebuffer::panda, this));
     }
 
     int init() {
@@ -63,13 +54,14 @@ public:
         double y = 10.0f;
         camInit();
 
-        Point min(0,0, -1);
-        Point max(7*3.5,4*3.5, -1);
-        m_camera.lookat(min, max);
+//        Point min(0,0, -1);
+//        Point max(7*3.5,4*3.5);
+//        m_mire.bounds(min, max);
+//        m_camera.lookat(Point(), -10.f);
         glClearColor(0.2, 0.2, 0.2, 1.f);
         glDepthFunc(GL_LESS);
         glEnable(GL_DEPTH_TEST);
-        glFrontFace(GL_CW);
+        glFrontFace(GL_CCW);
         return 0;   // ras, pas d'erreur
     }
 
@@ -90,18 +82,20 @@ public:
 
             cv::Vec3d rot = m_calibration->getRot();
 
-            Vector transform = Vector(t.at<double>(0), -t.at<double>(1), -t.at<double>(2));
+//            for(int i =0 ; i < 2; ++i)
+//                std::cout << t.at<double>(i) << " ";
+//            std::cout << std::endl;
 
-            Transform t2 = Translation(transform) * RotationX(rot[0]) * RotationY(-rot[1]) * RotationZ(-rot[2]);
+//            Vector transform = Vector(t.at<double>(2), -t.at<double>(0), -t.at<double>(1));
+//            Transform t2 = Translation(transform) * RotationX(-rot[2]) * RotationY(-rot[0]) * RotationZ(-rot[1]);
+//            m_mire.setTransform(t2);
 
-            //m_mire.setTransform(t2);
+//            Transform t3 = m_calibration->getTransform();
+//            std::cout << transform << std::endl;
+//            std::cout << rot[0] << " " << rot[1] << " " << rot[2] << std::endl;
+//            std::cout << t2 << std::endl;
 
-            m_object.setTransform(t2);
-
-            Transform t3 = m_calibration->getTransform();
-            std::cout << transform << std::endl;
-            std::cout << rot[0] << " " << rot[1] << " " << rot[2] << std::endl;
-            std::cout << t2 << std::endl;
+//            std::cout << m_calibration->getTransform() << std::endl << m_calibration->getView() << std::endl << m_camera.view() << std::endl;
 
         }
 
@@ -112,7 +106,8 @@ public:
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        draw(m_object, m_calibration->getTransform(), m_camera.view(), m_calibration->getProjection());
+//        draw(m_mire, m_mire.getTransform(), m_camera);
+        draw(m_mire, m_calibration->getTransform(), m_calibration->getView(), m_calibration->getProjection());
 
         return 1;
     }
@@ -124,6 +119,10 @@ int main(int argc, char **argv) {
 
     Framebuffer tp;
     tp.run();
+
+//    CamCalibration c;
+//    c.start();
+
 
     return 0;
 }
