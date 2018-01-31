@@ -52,6 +52,7 @@ private :
     void getEulerAngle(cv::Mat &rotCamerMatrix,cv::Vec3d &eulerAngles);
     void computeFrustum();
     void computeTransform(cv::Mat rodri, cv::Mat translation);
+    bool findMagicWand(cv::Mat& view);
 
 };
 
