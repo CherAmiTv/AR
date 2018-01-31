@@ -381,6 +381,7 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
     bool first = false;
     for(;;) {
         cam >> view;
+        // chessboard
         flag = findChessboardCorners(view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
         if (flag) {
             drawChessboardCorners(view, s, Mat(pointImage), flag);
@@ -392,6 +393,10 @@ void CamCalibration::start(std::string filePath, bool needCalibration) {
             getEulerAngle(tmp, rot);
             transform = tvec;
         }
+
+        // magic wand detection
+        findMagicWand(view);
+
         char key = (char)waitKey(50);
 
         if( key  == 27 )
@@ -611,5 +616,53 @@ void CamCalibration::computeTransform(cv::Mat rodri, cv::Mat translation) {
 
     transformation.m[2][3] = -translation.at<double>(2);
 
+}
+
+bool CamCalibration::findMagicWand(Mat& view) {
+    std::vector< std::vector< cv::Point > > contours;
+    std::vector<cv::Vec4i> hierarchy;
+
+    // create a mask to filter the red color
+    cv::Mat hsv_foreground, mask_color, low_mask_color, high_mask_color;
+    cv::cvtColor(view, hsv_foreground, cv::COLOR_BGR2HSV);
+
+    /*
+    // red color mask in HSV
+    // first mask : low red in hsv
+    cv::Scalar low_color_hsv = cv::Scalar(160,200,70,0);
+    cv::Scalar middle_low_color_hsv = cv::Scalar(180,255,255,0);
+    // second mask : upper red in hsv
+    cv::Scalar middle_high_color_hsv = cv::Scalar(0,200,70,0);
+    cv::Scalar high_color_hsv = cv::Scalar(20,255,255,0);
+    */
+
+    // yellow color
+    cv::Scalar low_color_hsv = cv::Scalar(20, 100, 100);
+    cv::Scalar high_color_hsv = cv::Scalar(30, 255, 255);
+
+    inRange(hsv_foreground, low_color_hsv, high_color_hsv, mask_color);
+
+    /*
+    // keep (white) the pixels which are between the 2 hsv values
+    inRange(hsv_foreground, low_color_hsv, middle_low_color_hsv, low_mask_color); // first mask : lower
+    inRange(hsv_foreground, middle_high_color_hsv, high_color_hsv, high_mask_color); // second mask : upper
+    bitwise_or(low_mask_color, high_mask_color, mask_color); // merge of the two masks
+    */
+
+    imshow("mask", mask_color);
+
+    // increase the quality with erode (decrease the noise) and dilate (fill the holes)
+    erode(mask_color, mask_color, cv::Mat::ones(3, 3,CV_32F), cv::Point(-1,-1), 1, 1, 1);
+    dilate(mask_color, mask_color, cv::Mat::ones(9,9,CV_32F), cv::Point(-1,-1), 2, 1, 1);
+
+    // contours detection
+    cv::findContours(mask_color, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+
+    // search the center of the red torso
+    if(contours.size() > 0) {
+        cv::Moments mu = moments(contours[0]);
+        cv::Point center(mu.m10/mu.m00 , mu.m01/mu.m00);
+        cv::rectangle(view, cv::Point(center.x-5, center.y-5), cv::Point(center.x+5, center.y+5), cv::Scalar(0,255,0), 1, 8, 0);
+    }
 }
 

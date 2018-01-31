@@ -24,7 +24,7 @@ private:
 class Object : public Mesh{
 public:
 
-    Object(Transform t, std::string filePath = "Test/sten.obj");
+    Object(Transform t, std::string filePath = "Test/floor.obj");
     Transform& getTransform(){return transform;}
     void setTransform(const Transform& t){transform = t;}
 private:
