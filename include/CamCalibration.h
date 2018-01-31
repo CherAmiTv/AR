@@ -28,6 +28,7 @@ public:
     Transform getProjection()const{ return frustum;}
     Transform getTransform()const{return transformation;};
     Transform getView()const{return view;};
+    Point getMagicWand()const{return Point(magicWand.x, magicWand.y, 0.0);};
 
     cv::Mat& getMat() {return image;}
     bool getFlag()const {return flag;}
@@ -45,6 +46,8 @@ private :
     cv::VideoCapture cam;
     cv::Mat image;
     bool flag;
+
+    cv::Point magicWand;
 
     Transform lookat(const cv::Vec3f eye, const cv::Vec3f center, const cv::Vec3f up);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);

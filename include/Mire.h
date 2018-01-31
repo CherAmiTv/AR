@@ -24,7 +24,7 @@ private:
 class Object : public Mesh{
 public:
 
-    Object(Transform t, std::string filePath = "Test/floor.obj");
+    Object(Transform t, std::string filePath = "Test/floor.obj", vec3 objectColor = vec3(1,1,1));
     Transform& getTransform(){return transform;}
     void setTransform(const Transform& t){transform = t;}
 private:

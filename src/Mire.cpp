@@ -33,14 +33,14 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
     }
 
     for(int i = 0; i < indices.size(); i++) {
-        vertex(tmp[indices[i]]);
         color(1,1,1);
+        vertex(tmp[indices[i]]);
     }
 
     transform = t;
 }
 
-Object::Object(Transform t, std::string filename) {
+Object::Object(Transform t, std::string filename, vec3 objectColor) {
 
     Mesh mesh = read_mesh(filename.c_str());
     if(mesh == Mesh::error()) exit(0);
@@ -58,8 +58,8 @@ Object::Object(Transform t, std::string filename) {
     }
 
     for(int i = 0; i < tmp_vec3.size(); i++) {
+        color(objectColor.x, objectColor.y, objectColor.z);
         vertex(tmp_vec3[i]);
-        color(1,1,1);
     }
 
     transform = t;
