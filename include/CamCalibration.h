@@ -16,6 +16,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <mat.h>
 
+static const int streamCamera = 1; // 0 : default camera, 1 or 2 : other camera
 
 class CamCalibration {
 

@@ -69,8 +69,6 @@ public:
     }
     void interprate()
     {
-
-
         goodInput = true;
         if (boardSize.width <= 0 || boardSize.height <= 0)
         {
@@ -93,28 +91,8 @@ public:
             inputType = INVALID;
         else
         {
-            if (input[0] >= '0' && input[0] <= '9')
-            {
-                stringstream ss(input);
-                ss >> cameraID;
-                inputType = CAMERA;
-            }
-            else
-            {
-                if (isListOfImages(input) && readStringList(input, imageList))
-                {
-                    inputType = IMAGE_LIST;
-                    nrFrames = (nrFrames < (int)imageList.size()) ? nrFrames : (int)imageList.size();
-                }
-                else
-                    inputType = VIDEO_FILE;
-            }
-            if (inputType == CAMERA)
-                inputCapture.open(cameraID);
-            if (inputType == VIDEO_FILE)
-                inputCapture.open(input);
-            if (inputType != IMAGE_LIST && !inputCapture.isOpened())
-                inputType = INVALID;
+            cameraID = streamCamera;
+            inputCapture.open(cameraID);
         }
         if (inputType == INVALID)
         {
@@ -306,7 +284,7 @@ void CamCalibration::start(std::string filePath) {
 
     computeFrustum();
 
-    VideoCapture cam(0);
+    VideoCapture cam(streamCamera);
     Mat view;
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
