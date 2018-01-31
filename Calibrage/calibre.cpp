@@ -79,9 +79,8 @@ public:
         }
         if (squareSize <= 10e-6)
         {
-//            squareSize
             cerr << "Invalid square size " << squareSize << endl;
-//            goodInput = false;
+            goodInput = false;
         }
         if (nrFrames <= 0)
         {
@@ -93,28 +92,8 @@ public:
             inputType = INVALID;
         else
         {
-            if (input[0] >= '0' && input[0] <= '9')
-            {
-                stringstream ss(input);
-                ss >> cameraID;
-                inputType = CAMERA;
-            }
-            else
-            {
-                if (isListOfImages(input) && readStringList(input, imageList))
-                {
-                    inputType = IMAGE_LIST;
-                    nrFrames = (nrFrames < (int)imageList.size()) ? nrFrames : (int)imageList.size();
-                }
-                else
-                    inputType = VIDEO_FILE;
-            }
-            if (inputType == CAMERA)
-                inputCapture.open(cameraID);
-            if (inputType == VIDEO_FILE)
-                inputCapture.open(input);
-            if (inputType != IMAGE_LIST && !inputCapture.isOpened())
-                inputType = INVALID;
+            cameraID = streamCamera;
+            inputCapture.open(cameraID);
         }
         if (inputType == INVALID)
         {

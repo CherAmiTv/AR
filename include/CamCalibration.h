@@ -15,10 +15,11 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <mat.h>
+#include <glcore.h>
 
+static const int streamCamera = 1; // 0 : default camera, 1 or 2 : other camera
 
 class CamCalibration {
-
 public:
     void start(std::string filePath = "out_camera_data.xml"); // Call load
 
@@ -29,6 +30,8 @@ public:
     Transform getView()const{return view;};
     Point getMagicWand()const{return Point(magicWand.x, magicWand.y, 0.0);};
 
+    cv::Mat& getMat() {return image;}
+
 private :
     Transform view;
     cv::Mat invCameraMatrix;
@@ -38,9 +41,11 @@ private :
     Transform transformation;
     cv::Mat rvec;
     cv::Mat tvec;
-
     cv::Vec3d euler;
     cv::Mat transform;
+    cv::VideoCapture cam;
+    cv::Mat image;
+
 
     cv::Point magicWand;
 

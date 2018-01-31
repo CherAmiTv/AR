@@ -69,8 +69,6 @@ public:
     }
     void interprate()
     {
-
-
         goodInput = true;
         if (boardSize.width <= 0 || boardSize.height <= 0)
         {
@@ -93,28 +91,8 @@ public:
             inputType = INVALID;
         else
         {
-            if (input[0] >= '0' && input[0] <= '9')
-            {
-                stringstream ss(input);
-                ss >> cameraID;
-                inputType = CAMERA;
-            }
-            else
-            {
-                if (isListOfImages(input) && readStringList(input, imageList))
-                {
-                    inputType = IMAGE_LIST;
-                    nrFrames = (nrFrames < (int)imageList.size()) ? nrFrames : (int)imageList.size();
-                }
-                else
-                    inputType = VIDEO_FILE;
-            }
-            if (inputType == CAMERA)
-                inputCapture.open(cameraID);
-            if (inputType == VIDEO_FILE)
-                inputCapture.open(input);
-            if (inputType != IMAGE_LIST && !inputCapture.isOpened())
-                inputType = INVALID;
+            cameraID = streamCamera;
+            inputCapture.open(cameraID);
         }
         if (inputType == INVALID)
         {
@@ -306,21 +284,23 @@ void CamCalibration::start(std::string filePath) {
 
     computeFrustum();
 
-    VideoCapture cam(0);
-    Mat view;
+    cam = VideoCapture(0);
+
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
     std::vector<Point3f> pointMire = initPoint3D(7, 4, 35.f);
-
+    Mat imageMod;
     Mat rotMatrix;
     bool flag;
     bool first = false;
     for(;;) {
-        cam >> view;
-        // chessboard
-        flag = findChessboardCorners(view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
+
+        cam >> image;
+        image.copyTo(imageMod);
+        flag = findChessboardCorners(imageMod, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
+
         if (flag) {
-            drawChessboardCorners(view, s, Mat(pointImage), flag);
+            drawChessboardCorners(imageMod, s, Mat(pointImage), flag);
 
             solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec, first, CV_EPNP);
             Rodrigues(rvec, rotMatrix);
@@ -332,13 +312,13 @@ void CamCalibration::start(std::string filePath) {
         }
 
         // magic wand detection
-        findMagicWand(view);
+        findMagicWand(image);
 
         char key = (char)waitKey(50);
 
         if( key  == 27 )
             break;
-        imshow(" ", view);
+        imshow(" ", imageMod);
     }
 
 
