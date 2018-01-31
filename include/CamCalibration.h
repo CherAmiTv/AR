@@ -17,7 +17,7 @@
 #include <mat.h>
 #include <glcore.h>
 
-static const int streamCamera = 1; // 0 : default camera, 1 or 2 : other camera
+static const int streamCamera = 0; // 0 : default camera, 1 or 2 : other camera
 
 class CamCalibration {
 public:
@@ -30,7 +30,7 @@ public:
     Transform getView()const{return view;};
 
     cv::Mat& getMat() {return image;}
-
+    bool getFlag()const {return flag;}
 private :
     Transform view;
     cv::Mat invCameraMatrix;
@@ -44,7 +44,7 @@ private :
     cv::Mat transform;
     cv::VideoCapture cam;
     cv::Mat image;
-
+    bool flag;
 
     Transform lookat(const cv::Vec3f eye, const cv::Vec3f center, const cv::Vec3f up);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);
