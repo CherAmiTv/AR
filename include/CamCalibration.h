@@ -15,10 +15,10 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <mat.h>
+#include <glcore.h>
 
 
 class CamCalibration {
-
 public:
     void start(std::string filePath = "out_camera_data.xml"); // Call load
 
@@ -27,6 +27,8 @@ public:
     Transform getProjection()const{ return frustum;}
     Transform getTransform()const{return transformation;};
     Transform getView()const{return view;};
+
+    cv::Mat& getMat() {return image;}
 
 private :
     Transform view;
@@ -37,9 +39,11 @@ private :
     Transform transformation;
     cv::Mat rvec;
     cv::Mat tvec;
-
     cv::Vec3d euler;
     cv::Mat transform;
+    cv::VideoCapture cam;
+    cv::Mat image;
+
 
     Transform lookat(const cv::Vec3f eye, const cv::Vec3f center, const cv::Vec3f up);
     std::vector<cv::Point3f> initPoint3D(int x, int y, float squareSize);

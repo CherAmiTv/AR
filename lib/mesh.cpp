@@ -421,7 +421,7 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
     if(!use_mesh_color)
         m_program= read_program( smart_path("data/mesh.glsl"), definitions.c_str());
     else
-        m_program= read_program( smart_path("data/mesh_color.glsl"), definitions.c_str());
+        m_program= read_program( smart_path("data/mesh.glsl"), definitions.c_str());
     return m_program;
 }
 

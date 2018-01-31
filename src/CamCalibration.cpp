@@ -306,20 +306,21 @@ void CamCalibration::start(std::string filePath) {
 
     computeFrustum();
 
-    VideoCapture cam(0);
-    Mat view;
+    cam = VideoCapture(0);
+
     Size2i s = {7,4};
     std::vector<Point2f> pointImage;
     std::vector<Point3f> pointMire = initPoint3D(7, 4, 35.f);
-
+    Mat imageMod;
     Mat rotMatrix;
     bool flag;
     bool first = false;
     for(;;) {
-        cam >> view;
-        flag = findChessboardCorners(view, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
+        cam >> image;
+        image.copyTo(imageMod);
+        flag = findChessboardCorners(imageMod, s, pointImage, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK);
         if (flag) {
-            drawChessboardCorners(view, s, Mat(pointImage), flag);
+            drawChessboardCorners(imageMod, s, Mat(pointImage), flag);
 
             solvePnP(pointMire, pointImage, cameraMatrix, distCoeffs, rvec, tvec, first, CV_EPNP);
             Rodrigues(rvec, rotMatrix);
@@ -333,7 +334,7 @@ void CamCalibration::start(std::string filePath) {
 
         if( key  == 27 )
             break;
-        imshow(" ", view);
+        imshow(" ", imageMod);
     }
 
 
