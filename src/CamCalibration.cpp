@@ -476,8 +476,8 @@ bool CamCalibration::findMagicWand(Mat& view) {
     //imshow("mask", mask_color);
 
     // increase the quality with erode (decrease the noise) and dilate (fill the holes)
-    erode(mask_color, mask_color, cv::Mat::ones(5, 5,CV_32F), cv::Point(-1,-1), 1, 1, 1);
-    dilate(mask_color, mask_color, cv::Mat::ones(11,11,CV_32F), cv::Point(-1,-1), 2, 1, 1);
+    erode(mask_color, mask_color, cv::Mat::ones(5, 5, CV_32F), cv::Point(-1,-1), 1, 1, 1);
+    dilate(mask_color, mask_color, cv::Mat::ones(11, 11, CV_32F), cv::Point(-1,-1), 2, 1, 1);
 
     //imshow("mask2", mask_color);
 
@@ -489,6 +489,6 @@ bool CamCalibration::findMagicWand(Mat& view) {
         cv::Moments mu = moments(contours[0]);
         cv::Point center(mu.m10/mu.m00 , mu.m01/mu.m00);
         magicWand = center;
-        cv::rectangle(view, cv::Point(center.x-5, center.y-5), cv::Point(center.x+5, center.y+5), cv::Scalar(0,255,0), 1, 8, 0);
+        cv::rectangle(view, cv::Point(center.x-5, center.y-5), cv::Point(center.x+5, center.y+5), cv::Scalar(0, 0, 255), 1, 8, 0);
     }
 }
