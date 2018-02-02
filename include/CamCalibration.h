@@ -19,7 +19,7 @@
 #include <glcore.h>
 
 static const float SQUARESIZE = 31.6;
-static const int STREAMCAMERA = 1; // 0 : default camera, 1 or 2 : other camera
+static const int STREAMCAMERA = 0; // 0 : default camera, 1 or 2 : other camera
 
 class CamCalibration {
 public:
