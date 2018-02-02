@@ -17,6 +17,7 @@
 #include <mat.h>
 #include "vec.h"
 #include <glcore.h>
+#include <color.h>
 
 static const float SQUARESIZE = 31.6;
 static const int STREAMCAMERA = 0; // 0 : default camera, 1 or 2 : other camera
@@ -36,6 +37,7 @@ public:
     bool getFlag()const {return flag;}
 
 private :
+
     Transform view;
     cv::Mat invCameraMatrix;
     cv::Mat cameraMatrix;       // Intrinsic parameters

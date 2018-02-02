@@ -8,8 +8,8 @@
 Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) {
     // squares black and white
     bool colorBlack = true;
-    m_row = row;
-    m_col = col;
+    m_row = row+1;
+    m_col = col+1;
     m_squareSize = squareSize;
 
 //    std::vector<vec3> tmp;
@@ -62,11 +62,13 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
         for(float w = -squareSize;w < width;w += squareSize) {
             // change color
             if(colorBlack) {
-                colorBlack = false;
-                color(Color(0,0,0));
+//                colorBlack = false;
+//                color(Color(0,0,0));
+                color(0,0.6,0);
             }else {
-                colorBlack = true;
-                color(Color(1,1,1));
+//                colorBlack = true;
+//                color(Color(1,1,1));
+                color(0,0.6,0);
             }
 
             // triangle 1 (left bottom)
@@ -93,154 +95,29 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
     transform = t;
 }
 
-//void Mire::setHeight(int x, int y, float z) {
-//    //TODO
-//    int cpt = x + y * m_col + 2;
-//    m_positions[cpt].z += z;
-//    vec3 tmp = vec3(m_positions[cpt].x, m_positions[cpt].y, m_positions[cpt].z);
-//
-//    vertex(cpt, tmp);
-
-//    float X = (x-1) * (m_squareSize);
-//    float Y = (y-1) * (m_squareSize);
-//    int cpt = 0;
-//    for(float h = -m_squareSize;h < m_row;h += m_squareSize) {
-//        for(float w = -m_squareSize;w < m_col;w += m_squareSize) {
-//
-//            // triangle 1 (left bottom)
-//            Point a(w + m_squareSize, h, z);
-//            Point b(w, h, z);
-//            Point c(w, h + m_squareSize, z);
-//
-//            // triangle 2 (right up)
-//            Point d = a;
-//            Point e = c;
-//            Point f(w + m_squareSize, h + m_squareSize, z);
-//
-//
-////            std::cout << m_positions[0].z << std::endl;
-//
-//            if(a.x == X && a.y == Y) {
-////                std::cout << cpt << std::endl;
-//                m_positions[cpt].z += z;
-//                vec3 tmp = vec3(m_positions[cpt].x, m_positions[cpt].y, m_positions[cpt].z);
-//                vertex(cpt, tmp);
-//            }
-//            if(b.x == X && b.y == Y){
-//                std::cout << cpt << std::endl;
-//
-//                m_positions[cpt+1].z += z;
-//                vec3 tmp = vec3(m_positions[cpt+1].x, m_positions[cpt+1].y, m_positions[cpt+1].z);
-//                vertex(cpt+1, tmp);
-//            }
-//            if(c.x == X && c.y == Y){
-//                std::cout << cpt << std::endl;
-//
-//                m_positions[cpt+2].z += z;
-//                vec3 tmp = vec3(m_positions[cpt+2].x, m_positions[cpt+2].y, m_positions[cpt+2].z);
-//                vertex(cpt+2, tmp);
-//
-//            }
-//            if(d.x == X && d.y == Y){
-//                std::cout << cpt << std::endl;
-//
-//                m_positions[cpt+3].z += z;
-//                vec3 tmp = vec3(m_positions[cpt+3].x, m_positions[cpt+3].y, m_positions[cpt+3].z);
-//                vertex(cpt+3, tmp);
-//            }
-//            if(e.x == X && e.y == Y){
-//                std::cout << cpt << std::endl;
-//
-//                m_positions[cpt+4].z += z;
-//                vec3 tmp = vec3(m_positions[cpt+4].x, m_positions[cpt+4].y, m_positions[cpt+4].z);
-//                vertex(cpt+4, tmp);
-//            }
-//            if(f.x == X && f.y == Y){
-//                std::cout << cpt << std::endl;
-//
-//                m_positions[cpt+5].z += z;
-//                vec3 tmp = vec3(m_positions[cpt+5].x, m_positions[cpt+5].y, m_positions[cpt+5].z);
-//                vertex(cpt+5, tmp);
-//            }
-//
-//            cpt += 6;
-//        }
-//    }
-//}
-
-//Ne fonctionne pas
 void Mire::setHeight(int x, int y, float z) {
-    // (-1,-1), origine en haut a gauche
-    if(x == -1) {
-        if(y == -1){
-            // coin en haut a gauche
-            int id = 1;
-            vec3 p = m_positions[id];
-            vertex(id, p.x, p.y, z);
+    float X = (x-1) * (m_squareSize);
+    float Y = (y-1) * (m_squareSize);
 
-        }else if(y == m_row-1) {
-            // coin en bas a gauche
-            int id1 = (6*m_col * (m_row-1)) + 2;
-            int id2 = (6*m_col * (m_row-1)) + 4;
-            vec3 p1 = m_positions[id1];
-            vec3 p2 = m_positions[id2];
-            vertex(id1, p1.x, p1.y, z);
-            vertex(id2, p2.x, p2.y, z);
+    for(int i = 0; i < m_positions.size(); ++i){
+        if(m_positions[i].x == X && m_positions[i].y == Y){
+            vec3 tmp = m_positions[i];
+            tmp.z += z;
 
-        }else {
-            // bordure gauche
-            int id1 = (6*m_col * y) + 2; // idem coin bas gauche
-            int id2 = (6*m_col * y) + 4; // idem coin bas gauche
-            int id3 = (6*m_col * (y+1)) + 1;
-            vec3 p1 = m_positions[id1];
-            vec3 p2 = m_positions[id2];
-            vec3 p3 = m_positions[id3];
-            vertex(id1, p1.x, p1.y, z);
-            vertex(id2, p2.x, p2.y, z);
-            vertex(id3, p3.x, p3.y, z);
+            if(tmp.z < -300.f)
+                tmp.z = -300.f;
 
-        }
-    }else if(x == m_col-1) {
-        if(y == -1){
-            // coin en haut a droite
-            int id1 = 6*(m_col-1);
-            int id2 = 6*(m_col-1) + 3;
-            vec3 p1 = m_positions[id1];
-            vec3 p2 = m_positions[id2];
-            vertex(id1, p1.x, p1.y, z);
-            vertex(id2, p2.x, p2.y, z);
 
-        }else if(y == m_row-1) {
-            // coin en bas a droite
-            int id = (6*m_col * m_row) + 1;
-            vec3 p = m_positions[id];
-            vertex(id, p.x, p.y, z);
+            Color col = interpColor(Color(0,0.6,0), Color(0.4f,0.4f,0.4f), tmp.z/-300.f);
 
-        }else {
-            // bordure droite
-            int id1 = (6*m_col * (y+1)) - 1;
-            int id2 = (6*m_col * (y+1)) + (6*(m_col-1));
-            int id3 = (6*m_col * (y+1)) + (6*(m_col-1)) + 3;
-            vec3 p1 = m_positions[id1];
-            vec3 p2 = m_positions[id2];
-            vec3 p3 = m_positions[id3];
-            vertex(id1, p1.x, p1.y, z);
-            vertex(id2, p2.x, p2.y, p2.z);
-            vertex(id3, p3.x, p3.y, p3.z);
-
-        }
-    }else {
-        if(y == -m_squareSize){
-            // bordure en haut
-
-        }else if(y == m_squareSize * (m_row-1)) {
-            // bordure en bas
-
-        }else {
-            // milieu
-
+            vertex(i, tmp);
+            color(i, col);
         }
     }
+}
+
+Color Mire::interpColor(const Color &base, const Color &max, float val) {
+    return (1-val) * base + val * max;
 }
 
 Object::Object(Transform t, std::string filename, vec3 objectColor) {
