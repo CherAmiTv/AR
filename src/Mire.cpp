@@ -8,18 +8,51 @@
 Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) {
     // squares black and white
     bool colorBlack = true;
+    m_row = row;
+    m_col = col;
+    m_squareSize = squareSize;
 
-    int m_row = row;
-    int m_col = col;
-    float m_squareSize = squareSize;
-    float height = row;//*squareSize;
-    float width = col;//*squareSize;
+//    std::vector<vec3> tmp;
+//    std::vector<int> indices;
+//
+//    for(int i = 0; i < row; ++i)
+//        for(int j = 0; j < col; ++j)
+//            tmp.push_back(vec3(j * squareSize, i * squareSize, 0.0));
+//
+//    for(int i = 0; i < (col-1); i++){
+//        int cptY = 0 ;
+//        int cptZ = 0;
+//        for(int j = 0; j < (row-1); j++){
+//            int cptX = 0;
+//            cptZ++;
+//            for(int k = 0; k < 2; k++){
+//                indices.push_back(j * col + cptX + i);
+//                indices.push_back(col * cptZ + i);
+//                indices.push_back(col * cptY + i + 1);
+//
+//                cptX++;
+//                if(k == 0)
+//                    cptY++;
+//            }
+//        }
+//    }
+//
+//    for(int i = 0; i < indices.size(); i++) {
+//        color(1,1,1);
+//        vertex(tmp[indices[i]]);
+//    }
+//
+//    transform = t;
+
+
+    float height = row * squareSize;
+    float width = col * squareSize;
 
     float z = 0.0;
 
     int count = 0;
 
-    for(float h = -squareSize;h < height;h += squareSize) {
+    for(float h = -squareSize; h < height;h += squareSize) {
         if(count%2 == 0)
             colorBlack = true;
         else
@@ -60,6 +93,82 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
     transform = t;
 }
 
+//void Mire::setHeight(int x, int y, float z) {
+//    //TODO
+//    int cpt = x + y * m_col + 2;
+//    m_positions[cpt].z += z;
+//    vec3 tmp = vec3(m_positions[cpt].x, m_positions[cpt].y, m_positions[cpt].z);
+//
+//    vertex(cpt, tmp);
+
+//    float X = (x-1) * (m_squareSize);
+//    float Y = (y-1) * (m_squareSize);
+//    int cpt = 0;
+//    for(float h = -m_squareSize;h < m_row;h += m_squareSize) {
+//        for(float w = -m_squareSize;w < m_col;w += m_squareSize) {
+//
+//            // triangle 1 (left bottom)
+//            Point a(w + m_squareSize, h, z);
+//            Point b(w, h, z);
+//            Point c(w, h + m_squareSize, z);
+//
+//            // triangle 2 (right up)
+//            Point d = a;
+//            Point e = c;
+//            Point f(w + m_squareSize, h + m_squareSize, z);
+//
+//
+////            std::cout << m_positions[0].z << std::endl;
+//
+//            if(a.x == X && a.y == Y) {
+////                std::cout << cpt << std::endl;
+//                m_positions[cpt].z += z;
+//                vec3 tmp = vec3(m_positions[cpt].x, m_positions[cpt].y, m_positions[cpt].z);
+//                vertex(cpt, tmp);
+//            }
+//            if(b.x == X && b.y == Y){
+//                std::cout << cpt << std::endl;
+//
+//                m_positions[cpt+1].z += z;
+//                vec3 tmp = vec3(m_positions[cpt+1].x, m_positions[cpt+1].y, m_positions[cpt+1].z);
+//                vertex(cpt+1, tmp);
+//            }
+//            if(c.x == X && c.y == Y){
+//                std::cout << cpt << std::endl;
+//
+//                m_positions[cpt+2].z += z;
+//                vec3 tmp = vec3(m_positions[cpt+2].x, m_positions[cpt+2].y, m_positions[cpt+2].z);
+//                vertex(cpt+2, tmp);
+//
+//            }
+//            if(d.x == X && d.y == Y){
+//                std::cout << cpt << std::endl;
+//
+//                m_positions[cpt+3].z += z;
+//                vec3 tmp = vec3(m_positions[cpt+3].x, m_positions[cpt+3].y, m_positions[cpt+3].z);
+//                vertex(cpt+3, tmp);
+//            }
+//            if(e.x == X && e.y == Y){
+//                std::cout << cpt << std::endl;
+//
+//                m_positions[cpt+4].z += z;
+//                vec3 tmp = vec3(m_positions[cpt+4].x, m_positions[cpt+4].y, m_positions[cpt+4].z);
+//                vertex(cpt+4, tmp);
+//            }
+//            if(f.x == X && f.y == Y){
+//                std::cout << cpt << std::endl;
+//
+//                m_positions[cpt+5].z += z;
+//                vec3 tmp = vec3(m_positions[cpt+5].x, m_positions[cpt+5].y, m_positions[cpt+5].z);
+//                vertex(cpt+5, tmp);
+//            }
+//
+//            cpt += 6;
+//        }
+//    }
+//}
+
+//Ne fonctionne pas
 void Mire::setHeight(int x, int y, float z) {
     // (-1,-1), origine en haut a gauche
     if(x == -1) {

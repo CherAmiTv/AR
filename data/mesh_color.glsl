@@ -33,7 +33,7 @@ out vec4 fragment_color;
 
 void main( )
 {
-    vec4 baseColor = texelFetch(diffuse_color, ivec2(gl_FragCoord.x, 480 - gl_FragCoord.y), 0);
+    vec4 baseColor = texelFetch(diffuse_color, ivec2(gl_FragCoord.xy), 0);
     fragment_color = baseColor;
 }
 #endif

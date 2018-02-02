@@ -15,9 +15,11 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <mat.h>
+#include "vec.h"
 #include <glcore.h>
 
-static const int streamCamera = 0; // 0 : default camera, 1 or 2 : other camera
+static const float SQUARESIZE = 31.6;
+static const int STREAMCAMERA = 1; // 0 : default camera, 1 or 2 : other camera
 
 class CamCalibration {
 public:
@@ -32,6 +34,7 @@ public:
 
     cv::Mat& getMat() {return image;}
     bool getFlag()const {return flag;}
+
 private :
     Transform view;
     cv::Mat invCameraMatrix;
