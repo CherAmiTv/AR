@@ -8,8 +8,8 @@
 Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) {
     // squares black and white
     bool colorBlack = true;
-    m_row = row;
-    m_col = col;
+    m_row = row+1;
+    m_col = col+1;
     m_squareSize = squareSize;
 
 //    std::vector<vec3> tmp;
@@ -170,15 +170,16 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
 
 //Ne fonctionne pas
 void Mire::setHeight(int x, int y, float z) {
-    // (-1,-1), origine en haut a gauche
-    if(x == -1) {
-        if(y == -1){
+    std::cout << x << " " << y << std::endl;
+    // (0,0), origine en haut a gauche
+    if(x == 0) {
+        if(y == 0){
             // coin en haut a gauche
             int id = 1;
             vec3 p = m_positions[id];
             vertex(id, p.x, p.y, z);
 
-        }else if(y == m_row-1) {
+        }else if(y == m_row) {
             // coin en bas a gauche
             int id1 = (6*m_col * (m_row-1)) + 2;
             int id2 = (6*m_col * (m_row-1)) + 4;
@@ -189,9 +190,9 @@ void Mire::setHeight(int x, int y, float z) {
 
         }else {
             // bordure gauche
-            int id1 = (6*m_col * y) + 2; // idem coin bas gauche
-            int id2 = (6*m_col * y) + 4; // idem coin bas gauche
-            int id3 = (6*m_col * (y+1)) + 1;
+            int id1 = (6*m_col * (y-1)) + 2; // idem coin bas gauche
+            int id2 = (6*m_col * (y-1)) + 4; // idem coin bas gauche
+            int id3 = (6*m_col * y) + 1;
             vec3 p1 = m_positions[id1];
             vec3 p2 = m_positions[id2];
             vec3 p3 = m_positions[id3];
@@ -200,8 +201,8 @@ void Mire::setHeight(int x, int y, float z) {
             vertex(id3, p3.x, p3.y, z);
 
         }
-    }else if(x == m_col-1) {
-        if(y == -1){
+    }else if(x == m_col) {
+        if(y == 0){
             // coin en haut a droite
             int id1 = 6*(m_col-1);
             int id2 = 6*(m_col-1) + 3;
@@ -210,34 +211,70 @@ void Mire::setHeight(int x, int y, float z) {
             vertex(id1, p1.x, p1.y, z);
             vertex(id2, p2.x, p2.y, z);
 
-        }else if(y == m_row-1) {
+        }else if(y == m_row) {
             // coin en bas a droite
-            int id = (6*m_col * m_row) + 1;
+            int id = (6*m_col * m_row) - 1;
             vec3 p = m_positions[id];
             vertex(id, p.x, p.y, z);
 
         }else {
             // bordure droite
-            int id1 = (6*m_col * (y+1)) - 1;
-            int id2 = (6*m_col * (y+1)) + (6*(m_col-1));
-            int id3 = (6*m_col * (y+1)) + (6*(m_col-1)) + 3;
+            int id1 = (6*m_col * y) - 1;
+            int id2 = (6*m_col * y) + (6*(m_col-1));
+            int id3 = (6*m_col * y) + (6*(m_col-1)) + 3;
             vec3 p1 = m_positions[id1];
             vec3 p2 = m_positions[id2];
             vec3 p3 = m_positions[id3];
             vertex(id1, p1.x, p1.y, z);
-            vertex(id2, p2.x, p2.y, p2.z);
-            vertex(id3, p3.x, p3.y, p3.z);
+            vertex(id2, p2.x, p2.y, z);
+            vertex(id3, p3.x, p3.y, z);
 
         }
     }else {
-        if(y == -m_squareSize){
+        if(y == 0){
             // bordure en haut
+            int id1 = 6*(x-1);
+            int id2 = 6*(x-1) + 2;
+            int id3 = 6*(x-1) + 7;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vec3 p3 = m_positions[id3];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, z);
+            vertex(id3, p3.x, p3.y, z);
 
-        }else if(y == m_squareSize * (m_row-1)) {
+        }else if(y == m_row) {
             // bordure en bas
+            int id1 = 6*m_col * (m_row-1) + 6*x - 1;
+            int id2 = 6*m_col * (m_row-1) + 6*x + 2;
+            int id3 = 6*m_col * (m_row-1) + 6*x + 4;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vec3 p3 = m_positions[id3];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, z);
+            vertex(id3, p3.x, p3.y, z);
 
         }else {
             // milieu
+            int id1 = 6*m_col*(y-1) + 6*x - 1;
+            int id2 = 6*m_col*(y-1) + 6*x + 2;
+            int id3 = 6*m_col*(y-1) + 6*x + 4;
+            int id4 = 6*m_col*y + 6*(x-1);
+            int id5 = 6*m_col*y + 6*(x-1) + 3;
+            int id6 = 6*m_col*y + 6*(x-1) + 7;
+            vec3 p1 = m_positions[id1];
+            vec3 p2 = m_positions[id2];
+            vec3 p3 = m_positions[id3];
+            vec3 p4 = m_positions[id4];
+            vec3 p5 = m_positions[id5];
+            vec3 p6 = m_positions[id6];
+            vertex(id1, p1.x, p1.y, z);
+            vertex(id2, p2.x, p2.y, z);
+            vertex(id3, p3.x, p3.y, z);
+            vertex(id4, p4.x, p4.y, z);
+            vertex(id5, p5.x, p5.y, z);
+            vertex(id6, p6.x, p6.y, z);
 
         }
     }

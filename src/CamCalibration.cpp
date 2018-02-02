@@ -470,13 +470,13 @@ bool CamCalibration::findMagicWand(Mat& view) {
     bitwise_or(low_mask_color, high_mask_color, mask_color); // merge of the two masks
     */
 
-    imshow("mask", mask_color);
+    //imshow("mask", mask_color);
 
     // increase the quality with erode (decrease the noise) and dilate (fill the holes)
     erode(mask_color, mask_color, cv::Mat::ones(5, 5,CV_32F), cv::Point(-1,-1), 1, 1, 1);
     dilate(mask_color, mask_color, cv::Mat::ones(11,11,CV_32F), cv::Point(-1,-1), 2, 1, 1);
 
-    imshow("mask2", mask_color);
+    //imshow("mask2", mask_color);
 
     // contours detection
     cv::findContours(mask_color, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
