@@ -1,0 +1,17 @@
+Etudiants : Anais DECOLLE, Julien FLECKINGER et Cassandra BRETON
+
+Projet :
+	Terraformation de terrain en AR
+
+UTILISATION :
+	Dans le répertoire AR/ faire : "cmake" 
+	puis : "cmake CMakeLists.txt" et "make"
+
+Pour lancer la calibration (doit être fait la 1ère fois):
+	Faire "./calibrage"
+	NOTE : Pensez bien à positionner la mire sur les rebords
+		pour une bonne calibration et à tenir la mire dans le bon sens (le carré en haut à gauche doit être noirs sinon tourner la feuille à 180°)
+
+Pour la simulation :
+	Faire "./AR"
+	Avec un petit objet petit jaune utilisé comme pointeur (type le crayon à papier dans votre pot à crayon était niquel) aller sur des intersections (matérialisé par des carrés verts) pour incrémenter la hauteur de ce point (le carré rouge représente le pointeur).
