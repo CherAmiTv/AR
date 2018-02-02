@@ -19,6 +19,8 @@ public:
     void setTransform(const Transform& t){transform = t;}
     void setHeight(int x, int y, float z);
 private:
+    Color interpColor(const Color& base, const Color& max, float val);
+
     Transform transform;
     int m_row;
     int m_col;

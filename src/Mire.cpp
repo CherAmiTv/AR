@@ -62,11 +62,13 @@ Mire::Mire(int row, int col, float squareSize, Transform t): Mesh(GL_TRIANGLES) 
         for(float w = -squareSize;w < width;w += squareSize) {
             // change color
             if(colorBlack) {
-                colorBlack = false;
-                color(Color(0,0,0));
+//                colorBlack = false;
+//                color(Color(0,0,0));
+                color(0,0.6,0);
             }else {
-                colorBlack = true;
-                color(Color(1,1,1));
+//                colorBlack = true;
+//                color(Color(1,1,1));
+                color(0,0.6,0);
             }
 
             // triangle 1 (left bottom)
@@ -101,9 +103,21 @@ void Mire::setHeight(int x, int y, float z) {
         if(m_positions[i].x == X && m_positions[i].y == Y){
             vec3 tmp = m_positions[i];
             tmp.z += z;
+
+            if(tmp.z < -300.f)
+                tmp.z = -300.f;
+
+
+            Color col = interpColor(Color(0,0.6,0), Color(0.4f,0.4f,0.4f), tmp.z/-300.f);
+
             vertex(i, tmp);
+            color(i, col);
         }
     }
+}
+
+Color Mire::interpColor(const Color &base, const Color &max, float val) {
+    return (1-val) * base + val * max;
 }
 
 Object::Object(Transform t, std::string filename, vec3 objectColor) {
