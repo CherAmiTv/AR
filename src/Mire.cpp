@@ -118,7 +118,7 @@ void Mire::setHeight(int x, int y, float z) {
             vertex(id1, p1.x, p1.y, z);
             vertex(id2, p2.x, p2.y, p2.z);
             vertex(id3, p3.x, p3.y, p3.z);
-            
+
         }
     }else {
         if(y == -m_squareSize){
